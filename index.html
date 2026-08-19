@@ -1,0 +1,2650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moonlight Team – Офлайн проект</title>
+    <!-- Подключаем библиотеку физики конфетти -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Подключаем 3D viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+    <style>
+        /* ==========================================================================
+           1. ШРИФТЫ И ПЕРЕМЕННЫЕ (Ночная палитра Moonlight)
+           ========================================================================== */
+
+        @font-face {
+            font-family: 'Lilita One Russian';
+            src: url('Lilita One Russian.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Nougat ExtraBlack';
+            src: url('Nougat-ExtraBlack.ttf') format('truetype');
+            font-weight: 900;
+            font-style: normal;
+        }
+
+        /* Клоунский/цирковой шрифт для пасхалки Reze_Daisy */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Bungee&display=swap');
+
+        /* Уличная / parkour / old-city тема SavvaViva */
+        body.savvaviva-theme {
+            --bg-main: #07121d;
+            --bg-card: #0d1b27;
+            --bg-card-border: #24556a;
+            --bg-button-secondary: #122a37;
+            --blue-accent: #1687b5;
+            --blue-glow: #43d5ff;
+            --text-white: #eefaff;
+            --text-muted: #9db8c7;
+            --green-tag: #8bdc78;
+            --purple-accent: #2bb7a8;
+            background:
+                radial-gradient(circle at 14% 16%, rgba(67,213,255,.16), transparent 25%),
+                radial-gradient(circle at 88% 30%, rgba(139,220,120,.10), transparent 24%),
+                linear-gradient(145deg, #07121d 0%, #0a1b29 48%, #101a1d 100%);
+        }
+        body.savvaviva-theme::before {
+            content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .16;
+            background-image:
+                linear-gradient(135deg, transparent 0 48%, rgba(67,213,255,.22) 49% 50%, transparent 51%),
+                linear-gradient(45deg, transparent 0 48%, rgba(139,220,120,.12) 49% 50%, transparent 51%);
+            background-size: 90px 90px;
+            mask-image: linear-gradient(to bottom, black, transparent 82%);
+        }
+        body.savvaviva-theme::after {
+            content: ""; position: fixed; left: -5vw; right: -5vw; bottom: 0; height: 28vh; pointer-events: none; z-index: 1; opacity: .20;
+            background: repeating-linear-gradient(165deg, transparent 0 38px, rgba(67,213,255,.12) 39px 41px, transparent 42px 76px);
+            transform: skewY(-3deg);
+        }
+        body.savvaviva-theme .header {
+            background: rgba(7,18,29,.91); border-bottom: 2px solid rgba(67,213,255,.42);
+            box-shadow: 0 8px 30px rgba(0,0,0,.45), 0 0 24px rgba(67,213,255,.08);
+        }
+        body.savvaviva-theme .server-card,
+        body.savvaviva-theme .codes-card,
+        body.savvaviva-theme .step-box,
+        body.savvaviva-theme .manga-card {
+            background: linear-gradient(145deg, rgba(13,31,44,.96), rgba(10,24,34,.96));
+            border: 2px solid rgba(67,213,255,.22);
+            box-shadow: 0 16px 45px rgba(0,0,0,.52), inset 0 0 25px rgba(67,213,255,.025);
+        }
+        body.savvaviva-theme .btn-primary,
+        body.savvaviva-theme .btn-download,
+        body.savvaviva-theme .btn-purple {
+            background: linear-gradient(135deg, #126f98, #1687b5 52%, #4acb9d);
+            color: #f4ffff; border: 2px solid rgba(126,231,255,.65);
+            box-shadow: 0 7px 24px rgba(22,135,181,.22);
+        }
+        body.savvaviva-theme .section-title,
+        body.savvaviva-theme .project-title {
+            text-shadow: 0 0 18px rgba(67,213,255,.20), 4px 4px 0 rgba(0,0,0,.40);
+        }
+        body.savvaviva-theme .hero-subtitle::after {
+            content: "  •  URBAN FLOW  •  PARKOUR  •  OLD STREETS"; display: block; margin-top: 10px;
+            color: #75d7b0; font-size: .7em; letter-spacing: 2px; opacity: .82;
+        }
+        body.savvaviva-theme .section-title::before { content: "// "; color: #43d5ff; }
+        body.savvaviva-theme .btn:hover { transform: translateY(-2px) rotate(-.4deg); }
+
+        .savva-aloe-bubbles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; display: none; }
+        body.savvaviva-theme .savva-aloe-bubbles { display: block; }
+        .savva-aloe-bubble {
+            position: absolute; bottom: -70px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 25%, rgba(238,255,248,.72), rgba(89,210,170,.20) 38%, rgba(22,135,181,.08) 68%, transparent 72%);
+            border: 1px solid rgba(125,226,194,.22);
+            box-shadow: 0 0 14px rgba(67,213,255,.08), inset 0 0 7px rgba(220,255,243,.14);
+            will-change: transform, opacity; animation: savvaAloeFloat linear infinite;
+        }
+        @keyframes savvaAloeFloat {
+            from { transform: translate3d(0,0,0) scale(.72); opacity: 0; }
+            14% { opacity: .48; }
+            50% { transform: translate3d(24px,-52vh,0) scale(1); }
+            100% { transform: translate3d(-20px,-112vh,0) scale(1.18); opacity: 0; }
+        }
+
+        /* Пиксельный и чистый футуристичный шрифт для подводного стиля N3K1T */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+
+        :root {
+            --bg-main: #03050c;
+            --bg-card: #080c18;
+            --bg-card-border: #141d38;
+            --bg-button-secondary: #0d1428;
+            --blue-accent: #2563eb;
+            --blue-glow: #38bdf8;
+            --text-white: #f8fafc;
+            --text-muted: #94a3b8;
+            --green-tag: #10b981;
+            --purple-accent: #8b5cf6;
+        }
+
+        /* ==========================================================================
+           СТИЛИ ПАСХАЛКИ REZE_DAISY (Милый розово-конфетти стиль)
+           ========================================================================== */
+        body.clown-theme {
+            --bg-main: #ffb3d1;
+            --bg-card: #fff0f5;
+            --bg-card-border: #ff66b2;
+            --bg-button-secondary: #ff99cc;
+            --blue-accent: #ff1493;
+            --blue-glow: #ff69b4;
+            --text-white: #4a0033;
+            --text-muted: #800040;
+            --green-tag: #00994d;
+            --purple-accent: #ff3385;
+            
+            background: linear-gradient(135deg, #ff99cc, #ffb3d1, #ffcce6, #ff80bf, #ffb3d1);
+            background-size: 400% 400%;
+            animation: cuteGradientPulse 10s ease infinite;
+        }
+
+        @keyframes cuteGradientPulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body.clown-theme * {
+            font-family: 'Bungee', 'Fredoka One', cursive !important;
+            letter-spacing: 1px;
+        }
+
+        body.clown-theme .header {
+            background: rgba(255, 240, 245, 0.85);
+            border-bottom: 2px dashed #ff1493;
+        }
+
+        body.clown-theme .server-card, 
+        body.clown-theme .codes-card, 
+        body.clown-theme .step-box, 
+        body.clown-theme .manga-card {
+            background-color: #fff0f5;
+            border: 3px dashed #ff1493;
+            box-shadow: 0 10px 30px rgba(255, 20, 147, 0.4);
+        }
+
+        body.clown-theme .project-title {
+            background: linear-gradient(135deg, #ff1493, #ff69b4, #ffb6c1, #ff66b2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 3px 0px #fff);
+        }
+
+        /* ==========================================================================
+           СТИЛИ ПАСХАЛКИ N3K1T (Свежий подводный, светлый стиль + толстый пиксельный шрифт)
+           ========================================================================== */
+        body.n3k1t-theme {
+            --bg-main: #d4f6ff;
+            --bg-card: rgba(255, 255, 255, 0.82);
+            --bg-card-border: rgba(72, 202, 228, 0.8);
+            --bg-button-secondary: rgba(150, 230, 242, 0.85);
+            --blue-accent: #0077b6;
+            --blue-glow: #00b4d8;
+            --text-white: #03045e;
+            --text-muted: #023e8a;
+            --green-tag: #009688;
+            --purple-accent: #0077b6;
+
+            background: linear-gradient(180deg, #e0fbfc 0%, #c4f0f8 45%, #90e0ef 80%, #00b4d8 100%);
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        body.n3k1t-theme::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 119, 182, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 119, 182, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        body.n3k1t-theme::after {
+            content: '';
+            position: fixed;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px;
+            height: 900px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(144, 224, 239, 0.35) 45%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(50px);
+            animation: waterSunRay 9s ease-in-out infinite alternate;
+        }
+
+        @keyframes waterSunRay {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+        }
+
+        body.n3k1t-theme * {
+            font-family: 'Press Start 2P', monospace !important;
+            letter-spacing: -0.5px;
+        }
+
+        body.n3k1t-theme p, 
+        body.n3k1t-theme .hero-desc, 
+        body.n3k1t-theme .server-text, 
+        body.n3k1t-theme .support-text, 
+        body.n3k1t-theme .section-subtitle, 
+        body.n3k1t-theme .manga-card-desc, 
+        body.n3k1t-theme .disclaimer, 
+        body.n3k1t-theme .footer-bottom,
+        body.n3k1t-theme .nav-link,
+        body.n3k1t-theme .tag,
+        body.n3k1t-theme .version-badge {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 750 !important;
+            color: #023e8a !important;
+            letter-spacing: 0.3px;
+        }
+
+        body.n3k1t-theme .project-title,
+        body.n3k1t-theme .section-title,
+        body.n3k1t-theme .codes-title,
+        body.n3k1t-theme .server-name,
+        body.n3k1t-theme .manga-card-title,
+        body.n3k1t-theme .step-header {
+            font-family: 'Press Start 2P', monospace !important;
+            font-weight: 900 !important;
+            color: #03045e !important;
+            text-shadow: 2px 2px 0px rgba(144, 224, 239, 0.9), 0 0 15px rgba(0, 180, 216, 0.5);
+        }
+
+        body.n3k1t-theme .project-title {
+            font-size: 2rem !important;
+            line-height: 1.5;
+            background: linear-gradient(135deg, #03045e 0%, #0077b6 60%, #00b4d8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(3px 3px 0px rgba(144, 224, 239, 0.9));
+        }
+
+        body.n3k1t-theme .header {
+            background: rgba(224, 251, 252, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(144, 224, 239, 0.9);
+            box-shadow: 0 8px 25px rgba(0, 119, 182, 0.12);
+        }
+
+        body.n3k1t-theme .server-card, 
+        body.n3k1t-theme .codes-card, 
+        body.n3k1t-theme .step-box, 
+        body.n3k1t-theme .manga-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 3px solid rgba(144, 224, 239, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0, 119, 182, 0.18), inset 0 0 15px rgba(255, 255, 255, 0.9);
+        }
+
+        body.n3k1t-theme .btn-primary, 
+        body.n3k1t-theme .btn-download, 
+        body.n3k1t-theme .btn-purple {
+            background: linear-gradient(135deg, #00b4d8, #0077b6, #03045e);
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 6px 20px rgba(0, 119, 182, 0.35);
+            font-family: 'Press Start 2P', monospace !important;
+            font-size: 0.75rem !important;
+        }
+
+        /* Водные пузырьки для кода N3K1T */
+        .bubble-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 2;
+            display: none;
+        }
+
+        body.n3k1t-theme .bubble-container {
+            display: block;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -60px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(0, 180, 216, 0.4) 60%, rgba(0, 119, 182, 0.2) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.9), 0 4px 15px rgba(0, 119, 182, 0.25);
+            animation: riseBubble linear infinite;
+        }
+
+        @keyframes riseBubble {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.8);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.9;
+            }
+            80% {
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(40px) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* ==========================================================================
+           2. СБРОС И БАЗОВЫЕ СТИЛИ
+           ========================================================================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Lilita One Russian', sans-serif;
+            letter-spacing: 0.5px;
+            transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(14, 30, 75, 0.35) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(20, 20, 60, 0.25) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+
+        /* Интерактивный ночной свет под курсором / пальцем */
+        .cursor-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(37, 99, 235, 0.05) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 3;
+        }
+
+        /* ==========================================================================
+           3. ШАПКА (HEADER)
+           ========================================================================== */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(3, 5, 12, 0.8);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+            padding: 14px 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(14, 30, 75, 0.4);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-button-secondary));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: var(--text-white);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
+        }
+
+        .menu-btn:hover {
+            background-color: var(--blue-accent);
+            border-color: var(--blue-glow);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Выезжающее меню */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(2, 4, 10, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background-color: var(--bg-card);
+            border-right: 1px solid rgba(56, 189, 248, 0.2);
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--bg-card-border);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .sidebar-close:hover {
+            color: var(--text-white);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-button-secondary);
+            color: var(--text-white);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--bg-card-border);
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+        }
+
+        .sidebar-link:hover {
+            border-color: var(--blue-glow);
+            background-color: rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            transform: translateX(4px);
+        }
+
+        .logo-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-weight: bold;
+            color: var(--text-white);
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+        }
+
+        .logo-img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7));
+        }
+
+        .logo-img:hover {
+            transform: rotate(360deg) scale(1.15);
+        }
+
+        .logo-img.spin {
+            animation: spinFast 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes spinFast {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.25); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--blue-glow);
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+        }
+
+        /* ==========================================================================
+           4. HERO СЕКЦИЯ С НОЧНЫМ СВЕЧЕНИЕМ
+           ========================================================================== */
+
+        .hero {
+            padding: 50px 0 30px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, rgba(56, 189, 248, 0.05) 60%, transparent 80%);
+            z-index: -1;
+            filter: blur(40px);
+            animation: moonPulse 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes moonPulse {
+            0% { transform: translateX(-50%) scale(0.9); opacity: 0.6; }
+            100% { transform: translateX(-50%) scale(1.25); opacity: 1; }
+        }
+
+        .hero-center {
+            text-align: center;
+        }
+
+        .project-title {
+            font-size: 3.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: 12px;
+            
+            background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 25%, #93c5fd 50%, #2563eb 75%, #38bdf8 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleShimmer 6s ease infinite;
+
+            filter: drop-shadow(0px 3px 0px #1e3a8a) 
+                    drop-shadow(0px 6px 30px rgba(56, 189, 248, 0.6)) 
+                    drop-shadow(0px 0px 60px rgba(37, 99, 235, 0.4));
+            
+            user-select: none;
+        }
+
+        @keyframes titleShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.9);
+        }
+
+        .banner-video-link {
+            display: block;
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto 30px;
+            text-decoration: none;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 2px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(37, 99, 235, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .banner-video-link:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue-glow);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 40px rgba(56, 189, 248, 0.4);
+        }
+
+        .banner-video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: var(--bg-card);
+        }
+
+        .banner-video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 10px;
+        }
+
+        /* ==========================================================================
+           5. КНОПКИ
+           ========================================================================== */
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .btn-primary, .btn-download {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6, #38bdf8);
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(37, 99, 235, 0.45);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #6d28d9, #7c3aed, #a855f7, #c084fc);
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(124, 58, 237, 0.45);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .btn-primary:hover, .btn-download:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 35px rgba(56, 189, 248, 0.6);
+        }
+
+        .btn-purple:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 35px rgba(168, 85, 247, 0.6);
+        }
+
+        /* ==========================================================================
+           6. КАРТОЧКИ И СЕКЦИИ
+           ========================================================================== */
+
+        .section-server {
+            padding: 30px 0;
+        }
+
+        .server-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(14, 30, 75, 0.2);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .server-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .card-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .server-name {
+            font-size: 1.8rem;
+        }
+
+        .version-badge {
+            background-color: var(--bg-button-secondary);
+            color: var(--blue-glow);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .features-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background-color: var(--bg-button-secondary);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .tag-green {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--green-tag);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .support-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .server-text {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .download-group {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn-download {
+            flex: 1;
+            min-width: 240px;
+            padding: 16px 20px;
+        }
+
+        /* ==========================================================================
+           7. ГАЛЕРЕЯ СКРИНШОТОВ
+           ========================================================================== */
+
+        .screenshots-block {
+            margin-top: 25px;
+            border-top: 1px solid var(--bg-card-border);
+            padding-top: 25px;
+        }
+
+        .screenshots-slider {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 12px;
+            cursor: grab;
+            user-select: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .screenshots-slider:active {
+            cursor: grabbing;
+        }
+
+        .screenshots-slider::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .screenshots-slider::-webkit-scrollbar-track {
+            background: var(--bg-button-secondary);
+            border-radius: 10px;
+        }
+
+        .screenshots-slider::-webkit-scrollbar-thumb {
+            background: var(--blue-accent);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--blue-glow);
+        }
+
+        .screenshot-item {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            cursor: pointer;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .screenshot-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+
+        .screenshot-item:hover {
+            border-color: var(--blue-glow);
+            transform: translateY(-3px);
+        }
+
+        .screenshot-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* ==========================================================================
+           8. LIGHTBOX (ПРОСМОТР ФОТО)
+           ========================================================================== */
+
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(2, 4, 10, 0.95);
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 12px;
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 15px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(37, 99, 235, 0.4);
+            object-fit: contain;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .lightbox-img.fade {
+            opacity: 0.3;
+            transform: scale(0.97);
+        }
+
+        .lightbox-btn {
+            position: absolute;
+            background: rgba(8, 12, 24, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #fff;
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+            z-index: 3001;
+        }
+
+        .lightbox-btn:hover {
+            background: rgba(37, 99, 235, 0.8);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.7);
+            transform: scale(1.1);
+        }
+
+        .lightbox-close { top: 20px; right: 25px; font-size: 1.5rem; }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+
+        /* ==========================================================================
+           9. ИНСТРУКЦИЯ И КАРТИНКИ В ШАГАХ
+           ========================================================================== */
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            margin-top: -15px;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .section-steps { padding: 40px 0; }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .step-box {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .step-box:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .step-header {
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+            color: var(--text-white);
+        }
+
+        .step-box p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .step-img-container {
+            margin-top: 15px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            background-color: #000;
+        }
+
+        .step-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .step-box:hover .step-img {
+            transform: scale(1.03);
+        }
+
+        /* МАНГА И ЛОР */
+        .section-manga { padding: 30px 0; }
+
+        .manga-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .manga-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(139, 92, 246, 0.05);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .manga-card:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(139, 92, 246, 0.3);
+        }
+
+        .manga-card-info { margin-bottom: 20px; }
+
+        .manga-card-title {
+            font-size: 1.35rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .manga-card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* НОВОСТИ */
+        .section-news { padding: 30px 0; }
+        .telegram-post-wrapper {
+            margin: 0 auto 20px;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            background-color: var(--bg-card);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(37, 99, 235, 0.1);
+        }
+        .telegram-post-wrapper iframe { max-width: 100% !important; border-radius: 10px; }
+
+        /* СОЦСЕТИ */
+        .section-socials { padding: 30px 0; }
+        .socials-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-telegram {
+            background: linear-gradient(135deg, #229ED9, #38b6f1);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(34, 158, 217, 0.4);
+        }
+        .btn-telegram:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(34, 158, 217, 0.7); }
+        .btn-tiktok {
+            background-color: #000;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+        .btn-tiktok:hover { background-color: #111; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25); }
+
+        /* ==========================================================================
+           10. ВВОД КОДА
+           ========================================================================== */
+        .section-codes {
+            padding: 30px 0;
+        }
+
+        .codes-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(14, 30, 75, 0.2);
+        }
+
+        .codes-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .code-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .code-input-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .code-input {
+            flex: 1;
+            min-width: 240px;
+            background-color: var(--bg-button-secondary);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--text-white);
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .code-input:focus {
+            border-color: var(--blue-glow);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        .code-message {
+            margin-top: 15px;
+            font-size: 1rem;
+            min-height: 24px;
+        }
+
+        /* ==========================================================================
+           11. ПАСХАЛКА SAVVAVIVA (Кнопки в правом нижнем углу и панель цветов)
+           ========================================================================== */
+        .savva-controls {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 4000;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .savva-btn {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #fff;
+            border: 2px solid #38bdf8;
+            padding: 12px 20px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5);
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+        }
+
+        .savva-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(56, 189, 248, 0.7);
+        }
+
+        .savva-btn.active-mode {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #34d399;
+        }
+
+        /* Выбор цветов для граффити */
+        .savva-palette {
+            display: none;
+            gap: 8px;
+            margin-bottom: 5px;
+            background: rgba(8, 12, 24, 0.9);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: transform 0.2s;
+        }
+
+        .color-dot:hover {
+            transform: scale(1.15);
+        }
+
+        .color-white { background: #ffffff; border-color: #000; }
+        .color-blue { background: #38bdf8; border-color: #000; }
+        .color-black { background: #000000; border-color: #fff; }
+        .color-dot.selected { transform: scale(1.2); box-shadow: 0 0 10px #38bdf8; }
+
+        /* Холст для рисования граффити */
+        #graffitiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 3500;
+        }
+        #graffitiCanvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        /* Стиль падающих/толкающихся кружочков */
+        .physics-circle {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff700, #ffcc00);
+            border: 2px solid #ff9900;
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.6);
+            z-index: 3500;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ФУТЕР */
+        .footer {
+            border-top: 1px solid rgba(56, 189, 248, 0.15);
+            padding: 40px 0 30px;
+            margin-top: 40px;
+            background: rgba(2, 4, 10, 0.6);
+        }
+        .disclaimer { color: #64748b; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
+        .footer-bottom { color: #475569; font-size: 0.9rem; }
+
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 768px) { .nav-menu { display: none; } }
+        @media (max-width: 600px) {
+            .project-title { font-size: 2rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .server-name { font-size: 1.5rem; }
+            .download-group { flex-direction: column; }
+            .btn-download { width: 100%; min-width: unset; }
+            .cursor-light { display: none; }
+        }
+    
+/* AEROXP mobile usability improvements */
+@media (max-width: 768px){
+  #aeroxp-desktop .aero-desktop-icons{grid-template-columns:repeat(3,minmax(76px,1fr));gap:18px 10px;padding:18px 12px;}
+  #aeroxp-desktop .aero-icon{min-width:76px;min-height:72px;padding:8px 5px;touch-action:manipulation;}
+  #aeroxp-desktop .aero-icon-label{font-size:12px;line-height:1.2;}
+  #aeroxp-desktop .aero-window{width:min(94vw,720px);height:min(76vh,560px);left:3vw;top:10vh;border-radius:14px;}
+  #aeroxp-desktop .aero-toolbar{gap:6px;padding:7px;}
+  #aeroxp-desktop .aero-navbtn{width:40px;height:40px;min-width:40px;}
+  #aeroxp-desktop .aero-address{font-size:12px;padding:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #aeroxp-desktop .aero-sidebar{display:none;}
+  #aeroxp-desktop .aero-files{padding:12px;}
+  #aeroxp-desktop .aero-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  #aeroxp-desktop .aero-file{min-height:92px;padding:12px 8px;border-radius:12px;touch-action:manipulation;}
+  #aeroxp-desktop .aero-reader{width:94vw;height:82vh;left:3vw;top:9vh;border-radius:14px;}
+  #aeroxp-desktop .aero-reader-body{padding:18px;overflow:auto;-webkit-overflow-scrolling:touch;}
+  #aeroxp-desktop .aero-start-menu{width:min(92vw,360px);left:4vw;bottom:62px;}
+  #aeroxp-desktop .aero-gadgets{right:10px;top:10px;max-width:180px;}
+  #aeroxp-desktop .aero-gadget{padding:9px;}
+  #aeroxp-desktop .aero-taskbar{height:54px;}
+  #aeroxp-desktop .aero-start{width:54px;height:54px;}
+  #aeroxp-desktop .aero-task-app{min-width:44px;height:40px;}
+}
+@media (max-width: 520px){
+  #aeroxp-desktop .aero-desktop-icons{grid-template-columns:repeat(2,minmax(80px,1fr));max-width:230px;}
+  #aeroxp-desktop .aero-gadgets{display:none;}
+  #aeroxp-desktop .aero-window{height:72vh;top:8vh;}
+  #aeroxp-desktop .aero-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #aeroxp-desktop .aero-reader{height:80vh;top:8vh;}
+}
+
+/* =========================================================
+   PROJECT: AEROXP — Windows Vista inspired desktop
+   ========================================================= */
+#aeroxp-desktop{display:none;position:fixed;inset:0;z-index:999999;background:#0b1b2b;color:#111;font-family:"Segoe UI",Tahoma,Arial,sans-serif;overflow:hidden;cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M4 2l18 17-8 1 4 8-4 2-4-9-6 5z" fill="white" stroke="black" stroke-width="2"/></svg>') 3 2,auto}
+#aeroxp-desktop.aeroxp-open{display:block}
+.aero-wallpaper{position:absolute;inset:0;background:radial-gradient(circle at 72% 18%,rgba(91,180,255,.65),transparent 25%),radial-gradient(circle at 30% 72%,rgba(28,110,175,.5),transparent 30%),linear-gradient(135deg,#08192a 0%,#17658e 45%,#081a2c 100%)}
+.aero-glow{position:absolute;width:42vw;height:42vw;right:-8vw;top:-10vw;border-radius:50%;background:radial-gradient(circle,rgba(220,245,255,.7),rgba(87,190,255,.15) 42%,transparent 70%);filter:blur(8px);pointer-events:none}
+.aero-desktop-icons{position:absolute;left:18px;top:18px;display:flex;flex-direction:column;gap:16px;width:100px}
+.aero-icon{width:88px;padding:8px 4px;border:1px solid transparent;border-radius:4px;color:#fff;text-align:center;text-shadow:0 1px 3px #000;user-select:none}
+.aero-icon:hover{background:rgba(70,150,220,.28);border-color:rgba(255,255,255,.25)}
+.aero-icon-symbol{font-size:40px;line-height:42px;filter:drop-shadow(0 2px 3px #123)}
+.aero-icon-label{font-size:12px;line-height:16px;margin-top:4px}
+.aero-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);width:min(920px,88vw);height:min(620px,76vh);background:rgba(240,248,255,.9);border:1px solid rgba(255,255,255,.9);border-radius:9px;box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 0 1px rgba(40,90,130,.7);backdrop-filter:blur(12px);overflow:hidden}
+.aero-titlebar{height:44px;background:linear-gradient(180deg,rgba(236,249,255,.9),rgba(126,181,220,.72));display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #638bad;box-shadow:inset 0 1px rgba(255,255,255,.9)}
+.aero-title{font-weight:600;color:#17354e;text-shadow:0 1px #fff;flex:1;font-size:14px}
+.aero-controls{display:flex;gap:4px}.aero-win-btn{width:28px;height:22px;border-radius:3px;border:1px solid #5b7f9e;background:linear-gradient(#f8fdff,#b7d0e3);color:#19354b;font-size:12px}.aero-win-btn.close{background:linear-gradient(#f99b9b,#c94747);color:#fff}
+.aero-toolbar{height:42px;display:flex;align-items:center;gap:7px;padding:0 12px;background:linear-gradient(#f8fcff,#d9e8f2);border-bottom:1px solid #b4c9d8}.aero-navbtn{width:28px;height:26px;border:1px solid #9db5c7;border-radius:3px;background:#edf7fc;color:#35566d}.aero-address{flex:1;height:28px;border:1px solid #9fb8ca;border-radius:4px;background:#fff;display:flex;align-items:center;padding:0 10px;color:#4a6579;font-size:12px;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
+.aero-content{display:flex;height:calc(100% - 86px);background:rgba(255,255,255,.82)}
+.aero-sidebar{width:190px;background:linear-gradient(90deg,rgba(226,241,250,.95),rgba(201,225,240,.85));border-right:1px solid #a8c0d0;padding:12px 9px}.aero-side-title{font-size:12px;color:#31566f;font-weight:700;margin:5px 7px 10px}.aero-side-item{padding:7px 9px;border-radius:4px;color:#31546c;font-size:12px}.aero-side-item:hover{background:rgba(92,164,215,.2)}
+.aero-files{flex:1;padding:18px;overflow:auto}.aero-path{font-size:13px;color:#3a5d74;margin-bottom:15px;font-weight:600}.aero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px}.aero-file{min-height:92px;padding:10px 7px;border:1px solid transparent;border-radius:5px;text-align:center;color:#23445b;user-select:none}.aero-file:hover{background:rgba(126,192,231,.18);border-color:#b0cfe2}.aero-file-icon{font-size:42px;line-height:46px}.aero-file-name{font-size:12px;word-break:break-word}.aero-file-meta{font-size:10px;color:#6d8494;margin-top:3px}
+.aero-status{position:absolute;left:0;right:0;bottom:0;height:24px;background:linear-gradient(#e9f3f8,#c7dce8);border-top:1px solid #a5bdcc;color:#557085;font-size:11px;display:flex;align-items:center;padding:0 10px}
+.aero-taskbar{position:absolute;left:0;right:0;bottom:0;height:52px;background:linear-gradient(180deg,rgba(30,72,105,.8),rgba(7,25,43,.92));border-top:1px solid rgba(255,255,255,.28);box-shadow:0 -8px 25px rgba(0,0,0,.2);display:flex;align-items:center;padding:0 9px;gap:8px}.aero-start{width:45px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:radial-gradient(circle at 35% 30%,#fff,#64c6ff 35%,#1464a5 72%,#0b355c);box-shadow:0 0 14px #62caff;color:white;font-size:22px}.aero-task-app{height:36px;min-width:170px;border:1px solid rgba(255,255,255,.22);border-radius:5px;background:rgba(125,187,222,.22);color:#fff;padding:0 13px;text-align:left}.aero-clock{margin-left:auto;color:#eaf8ff;font-size:12px;text-shadow:0 1px #000}
+.aero-reader{display:none;position:absolute;inset:0;background:#dfeaf1;z-index:30}.aero-reader.open{display:block}.aero-reader-bar{height:48px;background:linear-gradient(#f7fcff,#c7dce8);border-bottom:1px solid #9ab4c6;display:flex;align-items:center;padding:0 12px;gap:10px}.aero-reader-title{font-weight:600;color:#24465d;flex:1}.aero-reader-close{border:1px solid #8ba6b9;border-radius:4px;background:linear-gradient(#fff,#c8dbe7);padding:5px 12px;color:#24465d}.aero-reader-body{height:calc(100% - 48px);overflow:auto;padding:clamp(24px,5vw,70px);background:linear-gradient(90deg,#fff,#f5f8fa);box-sizing:border-box}.aero-reader-paper{max-width:900px;margin:auto;background:#fff;border:1px solid #c5d4dd;border-radius:3px;box-shadow:0 7px 28px rgba(25,55,75,.16);padding:clamp(25px,5vw,55px);min-height:70%;box-sizing:border-box}.aero-reader-paper h2{font-size:22px;color:#21465d;margin:0 0 24px}.aero-reader-paper p{font-family:"Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.75;color:#263d4a;white-space:pre-wrap;margin:0}
+.aero-mobile-rotate{display:none;position:absolute;inset:0;z-index:100;background:linear-gradient(135deg,#071a2b,#176a91);color:white;align-items:center;justify-content:center;text-align:center;padding:30px}.aero-mobile-rotate .rotate-card{max-width:420px}.aero-mobile-rotate .rotate-icon{font-size:70px;animation:aeroRotate 2s ease-in-out infinite alternate}.aero-mobile-rotate h2{font-size:24px;margin:14px 0 8px}.aero-mobile-rotate p{opacity:.85;line-height:1.5;font-size:14px}@keyframes aeroRotate{to{transform:rotate(90deg)}}
+.aero-touch-cursor{display:none;position:fixed;z-index:1000002;width:22px;height:30px;pointer-events:none;transform:translate(-2px,-2px);filter:drop-shadow(0 1px 2px #000)}
+.aero-touch-cursor:before{content:"";position:absolute;left:0;top:0;border-left:11px solid white;border-top:16px solid transparent;border-bottom:10px solid transparent;transform:rotate(-35deg);filter:drop-shadow(0 0 0 #000)}
+.aero-touch-cursor:after{content:"";position:absolute;left:2px;top:2px;width:2px;height:23px;background:#111;transform:rotate(-35deg);transform-origin:top}
+@media (pointer:coarse){#aeroxp-desktop{cursor:none}.aero-touch-cursor{display:block}}
+@media (max-width:800px) and (orientation:portrait){.aero-window{width:92vw;height:78vh}.aero-sidebar{width:145px}.aero-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:600px) and (orientation:landscape){.aero-sidebar{width:135px}.aero-grid{grid-template-columns:repeat(4,1fr)}.aero-window{width:92vw;height:78vh}}
+
+
+/* AEROXP battery + Vista gadget system */
+.aero-gadgets{position:absolute;right:18px;top:18px;width:185px;display:flex;flex-direction:column;gap:9px;z-index:5;pointer-events:none}.aero-gadget{pointer-events:none;background:linear-gradient(180deg,rgba(248,253,255,.72),rgba(196,222,239,.38));border:1px solid rgba(255,255,255,.72);box-shadow:0 5px 18px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.8);border-radius:7px;padding:10px;color:#12364f;text-shadow:0 1px rgba(255,255,255,.7);backdrop-filter:blur(9px)}.aero-gadget-title{font-size:10px;font-weight:700;opacity:.82;letter-spacing:.4px}.aero-gadget-main{display:flex;align-items:center;gap:8px;margin-top:5px}.aero-battery-icon{width:34px;height:16px;border:2px solid #315b75;border-radius:3px;position:relative;background:rgba(255,255,255,.55);box-sizing:border-box}.aero-battery-icon:after{content:"";position:absolute;right:-5px;top:4px;width:3px;height:6px;background:#315b75;border-radius:0 2px 2px 0}.aero-battery-fill{height:100%;width:100%;background:linear-gradient(90deg,#49b96c,#8fe36c);border-radius:1px;transition:width .35s ease,background .35s ease}.aero-battery-fill.low{background:linear-gradient(90deg,#e6a43b,#e56a50)}.aero-battery-fill.critical{background:#d84949}.aero-battery-percent{font-size:18px;font-weight:700}.aero-gadget-sub{font-size:10px;color:#49697d;margin-top:4px}.aero-meter{height:5px;background:rgba(255,255,255,.55);border:1px solid rgba(65,101,122,.25);border-radius:5px;overflow:hidden;margin-top:6px}.aero-meter-fill{height:100%;width:34%;background:linear-gradient(90deg,#55a9df,#6dd0c2);transition:width .6s ease}.aero-battery-warning{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:120;display:none;min-width:280px;text-align:center;padding:9px 14px;border-radius:7px;background:rgba(92,34,28,.94);border:1px solid rgba(255,190,160,.7);color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.42);font-size:12px}.aero-battery-warning.show{display:block;animation:aeroWarn .28s ease-out}@keyframes aeroWarn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.aero-start-system{display:flex;gap:8px;padding:8px 12px;background:rgba(220,239,249,.65);border-top:1px solid rgba(111,145,164,.25);border-bottom:1px solid rgba(111,145,164,.25);font-size:10px;color:#426176}.aero-start-system strong{color:#1b425c}.aero-start-system .sys-battery{margin-left:auto}
+@media(max-width:700px){.aero-gadgets{right:8px;top:8px;width:145px;transform:scale(.9);transform-origin:top right}.aero-gadget{padding:8px}.aero-battery-warning{min-width:230px;font-size:11px}}
+
+/* AEROXP REAL-DESKTOP POLISH */
+#aeroxp-desktop.aeroxp-open{font-family:"Segoe UI",Tahoma,sans-serif}
+.aero-window,.aero-reader{will-change:transform;}
+.aero-window{z-index:20;}
+.aero-window.is-active{box-shadow:0 22px 80px rgba(0,0,0,.62),0 0 0 1px rgba(225,247,255,.9),0 0 28px rgba(91,196,255,.18)}
+.aero-titlebar{user-select:none;cursor:move}
+.aero-file.selected{background:linear-gradient(rgba(111,188,239,.36),rgba(72,143,203,.18));border-color:#77acd0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.aero-file:active{transform:scale(.98)}
+.aero-icon.selected{background:rgba(76,154,220,.32);border-color:rgba(255,255,255,.4)}
+.aero-context{display:none;position:absolute;z-index:1000;min-width:210px;padding:5px;background:rgba(245,251,255,.98);border:1px solid #7f9eb4;border-radius:5px;box-shadow:0 10px 35px rgba(0,0,0,.45);color:#17384f;font:12px "Segoe UI",Tahoma,sans-serif}
+.aero-context.open{display:block}
+.aero-context button{display:block;width:100%;padding:8px 10px;border:0;background:transparent;text-align:left;color:inherit;border-radius:3px;cursor:pointer}
+.aero-context button:hover{background:#d8ebf8}.aero-context .sep{height:1px;background:#c3d4df;margin:4px 2px}
+.aero-search{display:flex;align-items:center;gap:7px;padding:0 10px;border-top:1px solid rgba(255,255,255,.2);height:39px;background:rgba(16,47,69,.8)}
+.aero-search input{flex:1;border:1px solid #6e8fa6;border-radius:4px;padding:7px 9px;background:#fff;color:#18374d;outline:none;font:12px "Segoe UI"}
+.aero-search input:focus{box-shadow:0 0 0 2px rgba(79,174,235,.35)}
+.aero-start-body{display:flex;flex-direction:column;min-height:0;flex:1}.aero-start-list{overflow:auto}
+.aero-start-footer{align-items:center;gap:7px}.aero-shutdown{flex:1}
+.aero-tray{display:flex;align-items:center;gap:8px;margin-left:auto;color:#eaf8ff;font-size:14px}.aero-tray span{opacity:.88}.aero-clock{margin-left:0;min-width:54px;text-align:right}
+.aero-notification{position:absolute;right:12px;bottom:62px;z-index:80;display:none;min-width:250px;max-width:330px;padding:12px 14px;border-radius:7px;background:rgba(20,48,69,.95);border:1px solid rgba(255,255,255,.35);box-shadow:0 12px 35px rgba(0,0,0,.45);color:#fff;font-size:12px}.aero-notification.show{display:block;animation:aeroToast .22s ease-out}@keyframes aeroToast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.aero-shutdown-screen{display:none;position:absolute;inset:0;z-index:500;background:radial-gradient(circle at 50% 42%,#315a76,#07121e 65%,#02070c);color:white;align-items:center;justify-content:center;text-align:center}.aero-shutdown-screen.show{display:flex}.aero-shutdown-screen .power-orb{font-size:74px;filter:drop-shadow(0 0 20px #6ccaff);animation:aeroPower 1.4s ease-in-out infinite alternate}@keyframes aeroPower{to{transform:scale(1.06);filter:drop-shadow(0 0 38px #a8e6ff)}}
+.aero-computer-panel{display:none;position:absolute;inset:0;z-index:25;background:linear-gradient(135deg,rgba(235,247,255,.97),rgba(201,224,240,.96));color:#23465d}.aero-computer-panel.open{display:block}.aero-computer-head{height:48px;padding:0 14px;display:flex;align-items:center;border-bottom:1px solid #9ab7c9;background:linear-gradient(#f9fdff,#c7dce8);font-weight:700}.aero-computer-close{margin-left:auto;border:1px solid #8aa6b8;background:linear-gradient(#fff,#cadde8);border-radius:4px;padding:5px 12px;cursor:pointer}.aero-computer-body{padding:25px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}.aero-drive{background:rgba(255,255,255,.7);border:1px solid #aec5d4;border-radius:7px;padding:16px;box-shadow:0 4px 16px rgba(38,72,96,.12)}.aero-drive b{display:block;margin-bottom:8px}.aero-drive small{color:#658092}
+.aero-start-head{display:flex;align-items:center;gap:8px}.aero-start-head::before{content:"🪟"}.aero-desktop-icons{z-index:3}.aero-desktop-icons .aero-icon{cursor:default}
+@media (pointer:coarse){.aero-context{min-width:230px}.aero-file,.aero-icon,.aero-start-item,.aero-navbtn,.aero-win-btn,.aero-start{touch-action:manipulation}}
+
+
+
+/* AEROXP window controls: intentionally Vista-like, only Close is active */
+.aero-controls .aero-win-btn:not(.close){display:none}
+.aero-win-btn.close{width:42px;height:24px;font-size:17px;line-height:18px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.45)}
+.aero-window.closed{display:none}
+.aero-task-app{cursor:pointer}
+.aero-task-app.active{background:rgba(190,225,247,.38);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.aero-start{cursor:pointer;position:relative;z-index:100}
+.aero-start-menu{display:none;position:absolute;left:8px;bottom:58px;width:min(360px,calc(100vw - 16px));height:430px;border-radius:10px 10px 4px 4px;overflow:hidden;background:linear-gradient(180deg,rgba(242,250,255,.97),rgba(207,229,243,.96));border:1px solid rgba(255,255,255,.95);box-shadow:0 12px 45px rgba(0,0,0,.55),0 0 0 1px rgba(44,87,117,.75);backdrop-filter:blur(16px);color:#17364e;z-index:90}
+.aero-start-menu.open{display:flex;flex-direction:column}
+.aero-start-head{padding:16px 18px;background:linear-gradient(180deg,rgba(56,122,164,.88),rgba(25,75,108,.9));color:#fff;font-weight:700;font-size:16px;text-shadow:0 1px 2px #123}
+.aero-start-list{padding:12px;display:flex;flex-direction:column;gap:5px;flex:1}
+.aero-start-item{display:flex;align-items:center;gap:12px;border:1px solid transparent;border-radius:5px;background:transparent;padding:10px 12px;text-align:left;color:#21455d;cursor:pointer;font:13px "Segoe UI",Tahoma,sans-serif}
+.aero-start-item:hover{background:rgba(111,180,222,.25);border-color:rgba(87,143,179,.28)}
+.aero-start-icon{width:30px;text-align:center;font-size:22px}
+.aero-start-footer{padding:9px;background:rgba(33,78,108,.9);display:flex;justify-content:flex-end}
+.aero-shutdown{background:linear-gradient(#eaa0a0,#bd4141);border:1px solid #873333;color:#fff;border-radius:4px;padding:7px 12px;cursor:pointer;font:12px "Segoe UI",Tahoma,sans-serif}
+.aero-shutdown:hover{filter:brightness(1.08)}
+.aero-desktop-hint{position:absolute;right:18px;top:18px;padding:8px 12px;border-radius:6px;background:rgba(5,29,47,.35);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.82);font-size:11px;backdrop-filter:blur(6px);pointer-events:none}
+.aero-window.hidden{display:none}
+.aero-window .aero-titlebar{cursor:default}
+
+
+/* AEROXP mobile v2: larger touch targets and near-fullscreen workspace */
+@media (max-width: 768px){
+  #aeroxp-desktop{touch-action:manipulation;}
+  #aeroxp-desktop .aero-desktop-icons{left:10px;top:10px;width:auto;max-width:calc(100vw - 20px);display:grid;grid-template-columns:repeat(2,minmax(92px,1fr));gap:8px 10px;padding:0;}
+  #aeroxp-desktop .aero-icon{width:auto;min-width:92px;min-height:84px;padding:10px 6px;border-radius:9px;font-size:13px;}
+  #aeroxp-desktop .aero-icon-symbol{font-size:38px;line-height:42px;}
+  #aeroxp-desktop .aero-icon-label{font-size:13px;line-height:17px;}
+  #aeroxp-desktop .aero-window{width:calc(100vw - 14px);height:calc(100vh - 74px);left:7px;top:7px;transform:none;border-radius:12px;}
+  #aeroxp-desktop .aero-titlebar{height:48px;padding:0 10px;}
+  #aeroxp-desktop .aero-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #aeroxp-desktop .aero-controls button{width:42px;height:38px;font-size:24px;}
+  #aeroxp-desktop .aero-toolbar{height:54px;padding:6px;gap:6px;}
+  #aeroxp-desktop .aero-navbtn{width:44px;height:44px;min-width:44px;font-size:20px;}
+  #aeroxp-desktop .aero-address{font-size:12px;height:42px;line-height:42px;padding:0 10px;}
+  #aeroxp-desktop .aero-content{min-height:0;}
+  #aeroxp-desktop .aero-files{padding:10px;}
+  #aeroxp-desktop .aero-path{font-size:14px;padding:8px 4px;}
+  #aeroxp-desktop .aero-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  #aeroxp-desktop .aero-file{min-height:104px;padding:12px 8px;border-radius:12px;}
+  #aeroxp-desktop .aero-file-icon{font-size:42px;}
+  #aeroxp-desktop .aero-file-name{font-size:13px;overflow-wrap:anywhere;}
+  #aeroxp-desktop .aero-status{height:30px;font-size:11px;}
+  #aeroxp-desktop .aero-reader{width:calc(100vw - 14px);height:calc(100vh - 74px);left:7px;top:7px;border-radius:12px;}
+  #aeroxp-desktop .aero-reader-bar{height:52px;padding:6px 8px;}
+  #aeroxp-desktop .aero-reader-close{min-width:82px;height:40px;}
+  #aeroxp-desktop .aero-reader-body{padding:12px;-webkit-overflow-scrolling:touch;}
+  #aeroxp-desktop .aero-reader-paper{padding:18px 16px;font-size:15px;line-height:1.65;}
+  #aeroxp-desktop .aero-start-menu{width:min(94vw,390px);left:3vw;bottom:64px;max-height:calc(100vh - 80px);overflow:auto;}
+  #aeroxp-desktop .aero-taskbar{height:58px;padding:3px 6px;}
+  #aeroxp-desktop .aero-start{width:58px;height:58px;min-width:58px;}
+  #aeroxp-desktop .aero-task-app{min-width:48px;height:46px;}
+  #aeroxp-desktop .aero-tray{gap:5px;font-size:12px;}
+  #aeroxp-desktop .aero-rotate{font-size:14px;}
+}
+@media (max-width: 520px){
+  #aeroxp-desktop .aero-desktop-icons{grid-template-columns:repeat(2,minmax(88px,1fr));gap:6px;max-width:205px;}
+  #aeroxp-desktop .aero-icon{min-width:88px;min-height:76px;padding:7px 4px;}
+  #aeroxp-desktop .aero-icon-symbol{font-size:34px;line-height:38px;}
+  #aeroxp-desktop .aero-icon-label{font-size:12px;}
+  #aeroxp-desktop .aero-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+  #aeroxp-desktop .aero-file{min-height:96px;}
+  #aeroxp-desktop .aero-gadgets{display:none;}
+}
+@media (orientation: landscape) and (max-width: 900px){
+  #aeroxp-desktop .aero-desktop-icons{grid-template-columns:repeat(4,minmax(82px,1fr));max-width:380px;}
+  #aeroxp-desktop .aero-icon{min-height:70px;}
+  #aeroxp-desktop .aero-window{height:calc(100vh - 68px);}
+  #aeroxp-desktop .aero-reader{height:calc(100vh - 68px);}
+}
+</style>
+</head>
+<body>
+
+    <!-- Контейнер для эффекта водных пузырьков (активируется при коде N3K1T) -->
+    <div class="bubble-container" id="bubbleContainer"></div>
+    <div class="savva-aloe-bubbles" id="savvaAloeBubbles"></div>
+
+    <!-- Элемент подсветки за курсором/пальцем -->
+    <div class="cursor-light" id="cursorLight"></div>
+
+    <!-- Холст для граффити (SavvaViva) -->
+    <canvas id="graffitiCanvas"></canvas>
+
+    <!-- Кнопки пасхалки SavvaViva в правом нижнем углу -->
+    <div class="savva-controls" id="savvaControls">
+        <div class="savva-palette" id="savvaPalette">
+            <div class="color-dot color-white selected" data-color="white" title="Белый с черной обводкой"></div>
+            <div class="color-dot color-blue" data-color="blue" title="Светло-синий с черной обводкой"></div>
+            <div class="color-dot color-black" data-color="black" title="Черный с белой обводкой"></div>
+        </div>
+        <button class="savva-btn" id="graffitiToggleBtn">🎨 Рисовать граффити</button>
+        <button class="savva-btn" id="spawnCirclesBtn">🟡 Желтые кружочки</button>
+    </div>
+
+    <!-- Шапка сайта -->
+    <header class="header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="#" class="logo-link">
+                    <div class="logo">
+                        <img src="mlb.png" alt="Moonlight Team Logo" class="logo-img" id="starLogo">
+                        <span class="logo-text">Moonlight Team</span>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#download" class="nav-link">Скачать</a>
+                <a href="#manga" class="nav-link">Манга & Лор</a>
+                <a href="#news" class="nav-link">Новости</a>
+                <a href="#socials" class="nav-link">Соцсети</a>
+            </nav>
+
+            <div class="header-right">
+                <button class="menu-btn" id="menuToggle" title="Меню">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Боковое меню -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">Навигация</span>
+            <button class="sidebar-close" id="sidebarClose">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#download" class="sidebar-link" onclick="closeSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Скачать
+            </a>
+            <a href="#manga" class="sidebar-link" onclick="closeSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0-5H20"></path></svg>
+                Манга & Лор
+            </a>
+            <a href="#news" class="sidebar-link" onclick="closeSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Новости
+            </a>
+            <a href="#socials" class="sidebar-link" onclick="closeSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                Соцсети
+            </a>
+        </nav>
+    </aside>
+
+    <main>
+        <!-- Hero Секция -->
+        <section class="hero">
+            <div class="container hero-center">
+                <h1 class="project-title">MOONLIGHT BRAWL</h1>
+                <p class="hero-subtitle">Уникальный офлайн мод со своими бойцами и сюжетом</p>
+
+                <a href="https://www.youtube.com/watch?v=7o1sc7CFx1A" target="_blank" class="banner-video-link" title="Смотреть трейлер на YouTube">
+                    <div class="banner-video-container">
+                        <video autoplay muted loop playsinline>
+                            <source src="0726.mp4" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                </a>
+
+                <p class="hero-desc">Окунитесь в альтернативную вселенную Brawl Stars с эксклюзивным контентом и проработанным лором.</p>
+            </div>
+        </section>
+
+        <!-- Секция Скачивания и Галерея -->
+        <section id="download" class="section-server">
+            <div class="container">
+                <div class="server-card">
+                    <div class="card-top">
+                        <div class="card-info">
+                            <h2 class="server-name">Moonlight Brawl</h2>
+                            <span class="version-badge">Версия: v29</span>
+                        </div>
+                    </div>
+
+                    <div class="features-tags">
+                        <span class="tag tag-green">Обновляется</span>
+                        <span class="tag">Уникальные бойцы</span>
+                        <span class="tag">Эксклюзивный контент</span>
+                        <span class="tag">Офлайн-игра</span>
+                    </div>
+
+                    <p class="support-text">Поддерживается на Android arm32.</p>
+
+                    <p class="server-text">
+                        MoonlightBrawl — это оффлайн проект на версии v29, имеется свой лор и 10+ кастомных бойцов. Лор Мунлайт Бравла — это что-то по типу хедканона на оригинальный Brawl Stars, там есть и оригинальные бойцы и наши кастомные, которые по лору так же взаимодействуют с бойцами оригинальной игры!
+                    </p>
+
+                    <div class="download-group">
+                        <a href="https://www.mediafire.com/file/bge1ryucnxm0zio/Moonlight.apk/file" download class="btn btn-download">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.3414C17.0375 15.3414 16.6439 14.9478 16.6439 14.4623C16.6439 13.9768 17.0375 13.5832 17.523 13.5832C18.0085 13.5832 18.4021 13.9768 18.4021 14.4623C18.4021 14.9478 18.0085 15.3414 17.523 15.3414ZM6.47702 15.3414C5.99152 15.3414 5.5979 14.9478 5.5979 14.4623C5.5979 13.9768 5.99152 13.5832 6.47702 13.5832C6.96252 13.5832 7.35614 13.9768 7.35614 14.4623C7.35614 14.9478 6.96252 15.3414 6.47702 15.3414ZM16.1423 9.8512L17.8488 6.8953C17.9734 6.6795 17.8996 6.4042 17.6838 6.2796C17.468 6.155 17.1927 6.2288 17.0681 6.4446L15.3346 9.447C13.8163 8.7561 12.0838 8.4 10.2333 8.4C8.3828 8.4 6.6503 8.7561 5.132 9.447L3.3985 6.4446C3.2739 6.2288 2.9986 6.155 2.7828 6.2796C2.567 6.4042 2.4932 6.6795 2.6178 6.8953L4.3243 9.8512C1.8159 11.2335 0.1084 13.6841 0 16.5888H20.4667C20.3583 13.6841 18.6508 11.2335 16.1423 9.8512Z"/></svg>
+                            СКАЧАТЬ НА ANDROID
+                        </a>
+                    </div>
+
+                    <div class="screenshots-block">
+                        <div class="screenshots-slider" id="screenshotSlider">
+                            <div class="screenshot-item"><img src="1.png" alt="Скриншот 1"></div>
+                            <div class="screenshot-item"><img src="2.png" alt="Скриншот 2"></div>
+                            <div class="screenshot-item"><img src="3.png" alt="Скриншот 3"></div>
+                            <div class="screenshot-item"><img src="4.png" alt="Скриншот 4"></div>
+                            <div class="screenshot-item"><img src="5.png" alt="Скриншот 5"></div>
+                            <div class="screenshot-item"><img src="6.png" alt="Скриншот 6"></div>
+                            <div class="screenshot-item"><img src="7.png" alt="Скриншот 7"></div>
+                            <div class="screenshot-item"><img src="8.png" alt="Скриншот 8"></div>
+                            <div class="screenshot-item"><img src="9.png" alt="Скриншот 9"></div>
+                            <div class="screenshot-item"><img src="10.png" alt="Скриншот 10"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Инструкция -->
+        <section class="section-steps">
+            <div class="container">
+                <h2 class="section-title">Как установить?</h2>
+                <p class="section-subtitle">Это займет не более 2 минут</p>
+
+                <div class="steps-grid">
+                    <div class="step-box">
+                        <div class="step-header">Шаг 1. Скачайте APK</div>
+                        <p>Выберите нужную версию файла и загрузите её на свое устройство.</p>
+                        <div class="step-img-container">
+                            <img src="step1.png" alt="Шаг 1" class="step-img">
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-header">Шаг 2. Разрешите установку</div>
+                        <p>Это необходимо, нужно нажать на «Всё рано установить»</p>
+                        <div class="step-img-container">
+                            <img src="step2.png" alt="Шаг 2" class="step-img">
+                        </div>
+                    </div>
+
+                    <div class="step-box">
+                        <div class="step-header">Шаг 3. Установите</div>
+                        <p>Нажмите кнопку «Установить» во всплывающем окне инсталлятора. (В случае проблем с запуском игры используйте альтернативные методы, такие как эмуляторы для 32-битных игр на своём телефоне или на пк.)</p>
+                        <div class="step-img-container">
+                            <img src="step3.png" alt="Шаг 3" class="step-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Манга и Лор -->
+        <section id="manga" class="section-manga">
+            <div class="container">
+                <h2 class="section-title">Вселенная Moonlight</h2>
+                <div class="manga-grid">
+                    <div class="manga-card">
+                        <div class="manga-card-info">
+                            <h3 class="manga-card-title">📖 Манга Moonlight Brawl</h3>
+                            <p class="manga-card-desc">Узнай историю персонажей старр парка, пока только Юми, и то ещё не закончено.</p>
+                        </div>
+                        <a href="https://bewildered-plum-knbf712imw.edgeone.app/" target="_blank" class="btn btn-purple">ЧИТАТЬ МАНГУ</a>
+                    </div>
+
+                    <div class="manga-card">
+                        <div class="manga-card-info">
+                            <h3 class="manga-card-title">🔮 Лор персонажей</h3>
+                            <p class="manga-card-desc">Узнайте истории оригинальных и кастомных бойцов, их взаимоотношения и секреты игры.</p>
+                        </div>
+                        <a href="lore.html" class="btn btn-purple">УЗНАТЬ ЛОР</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Новости -->
+        <section id="news" class="section-news">
+            <div class="container">
+                <h2 class="section-title">Последние новости</h2>
+                <div class="telegram-post-wrapper">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="mb_moonbrawl/920" data-width="100%" data-dark="1"></script>
+                </div>
+                <div class="telegram-post-wrapper">
+                    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="mb_moonbrawl/918" data-width="100%" data-dark="1"></script>
+                </div>
+            </div>
+        </section>
+
+        <!-- Соцсети -->
+        <section id="socials" class="section-socials">
+            <div class="container">
+                <h2 class="section-title">Наши социальные сети</h2>
+                <div class="socials-group">
+                    <a href="https://t.me/mb_moonbrawl" target="_blank" class="btn btn-telegram">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.97 9.28c-.15.67-.55.83-1.12.52l-3.05-2.25-1.47 1.42c-.16.16-.3.3-.62.3l.22-3.11 5.67-5.12c.25-.22-.05-.34-.38-.12l-7.01 4.41-3.02-.95c-.66-.21-.67-.66.14-.98l11.81-4.55c.55-.2 1.02.13.8 1.15z"/></svg>
+                        Telegram
+                    </a>
+                    <a href="https://www.tiktok.com/@moonlight_brawl_v9" target="_blank" class="btn btn-tiktok">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-5.2-1.74 2.89 2.89 0 0 1 2.31-1.14V9.33a6.33 6.33 0 1 0 6.34 6.33V8.82a8.27 8.27 0 0 0 4.84 1.55V6.92a4.85 4.85 0 0 1-1.07-.23z"/></svg>
+                        TikTok
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ввод кода -->
+        <section class="section-codes">
+            <div class="container">
+                <div class="codes-card">
+                    <h2 class="codes-title">ВВОД КОДА</h2>
+                    <div class="code-form">
+                        <div class="code-input-row">
+                            <input type="text" id="promoInput" class="code-input" placeholder="Введите код...">
+                            <button type="button" id="promoBtn" class="btn btn-primary">АКТИВИРОВАТЬ</button>
+                        </div>
+                    </div>
+                    <div id="codeMessage" class="code-message"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-btn lightbox-close" id="lightboxClose">&times;</button>
+        <button class="lightbox-btn lightbox-prev" id="lightboxPrev">&#10094;</button>
+        <img src="" alt="Скриншот" class="lightbox-img" id="lightboxImg">
+        <button class="lightbox-btn lightbox-next" id="lightboxNext">&#10095;</button>
+    </div>
+
+    <!-- Футер -->
+    <footer class="footer">
+        <div class="container">
+            <p class="disclaimer">
+                Этот контент не связан с компанией Supercell, не поддерживается, не спонсируется и не был утвержден ею. Все товарные знаки и интеллектуальная собственность принадлежат их соответствующим владельцам.
+            </p>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Moonlight Team.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Скрипты -->
+    <script>
+        // Интерактивный ночной свет за курсором / пальцем
+        const cursorLight = document.getElementById('cursorLight');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursorLight.style.left = e.clientX + 'px';
+            cursorLight.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                cursorLight.style.left = touch.clientX + 'px';
+                cursorLight.style.top = touch.clientY + 'px';
+            }
+        }, { passive: true });
+
+        // Генерация водных пузырьков для подводного стиля N3K1T
+        const bubbleContainer = document.getElementById('bubbleContainer');
+        function createBubbles() {
+            bubbleContainer.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+                const size = Math.random() * 50 + 12;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.animationDuration = (Math.random() * 5 + 3) + 's';
+                bubble.style.animationDelay = (Math.random() * 4) + 's';
+                bubbleContainer.appendChild(bubble);
+            }
+        }
+        createBubbles();
+
+        // Логотип (анимация вращения)
+        const starLogo = document.getElementById('starLogo');
+        if (starLogo) {
+            starLogo.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                starLogo.classList.add('spin');
+                setTimeout(() => starLogo.classList.remove('spin'), 500);
+            });
+        }
+
+        // Боковое меню
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarClose = document.getElementById('sidebarClose');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', openSidebar);
+        sidebarClose.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Галерея / Lightbox
+        const screenshots = Array.from(document.querySelectorAll('.screenshot-item img'));
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const closeBtn = document.getElementById('lightboxClose');
+        const prevBtn = document.getElementById('lightboxPrev');
+        const nextBtn = document.getElementById('lightboxNext');
+
+        let currentIndex = 0;
+        let isAnimating = false;
+
+        function updateImage(newIndex) {
+            if (isAnimating) return;
+            isAnimating = true;
+            lightboxImg.classList.add('fade');
+            setTimeout(() => {
+                currentIndex = newIndex;
+                lightboxImg.src = screenshots[currentIndex].src;
+                lightboxImg.classList.remove('fade');
+                setTimeout(() => isAnimating = false, 150);
+            }, 150);
+        }
+
+        screenshots.forEach((img, index) => {
+            img.parentElement.addEventListener('click', () => {
+                currentIndex = index;
+                lightboxImg.src = screenshots[currentIndex].src;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        closeBtn.addEventListener('click', closeLightbox);
+        nextBtn.addEventListener('click', () => updateImage((currentIndex + 1) % screenshots.length));
+        prevBtn.addEventListener('click', () => updateImage((currentIndex - 1 + screenshots.length) % screenshots.length));
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') updateImage((currentIndex + 1) % screenshots.length);
+            if (e.key === 'ArrowLeft') updateImage((currentIndex - 1 + screenshots.length) % screenshots.length);
+        });
+
+        // ==========================================================================
+        // ЛОГИКА ПАСХАЛКИ SAVVAVIVA (Граффити и Физические кружочки)
+        // ==========================================================================
+        const savvaControls = document.getElementById('savvaControls');
+        const graffitiToggleBtn = document.getElementById('graffitiToggleBtn');
+        const spawnCirclesBtn = document.getElementById('spawnCirclesBtn');
+        const savvaPalette = document.getElementById('savvaPalette');
+        const graffitiCanvas = document.getElementById('graffitiCanvas');
+        const ctx = graffitiCanvas.getContext('2d');
+
+        let isGraffitiMode = false;
+        let isCirclesMode = false;
+        let activeColorConfig = { fill: '#ffffff', stroke: '#000000' };
+
+        // Массивы для хранения элементов с таймером удаления (10 сек)
+        let strokes = []; // Линии граффити
+        let physicsCircles = []; // Желтые кружочки (максимум 5 штук)
+        let animationFrameId = null;
+
+        // Подгонка размера холста
+        function resizeCanvas() {
+            graffitiCanvas.width = window.innerWidth;
+            graffitiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Выбор цветов палитры граффити
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+                dot.classList.add('selected');
+                const type = dot.getAttribute('data-color');
+                if (type === 'white') {
+                    activeColorConfig = { fill: '#ffffff', stroke: '#000000' };
+                } else if (type === 'blue') {
+                    activeColorConfig = { fill: '#38bdf8', stroke: '#000000' };
+                } else if (type === 'black') {
+                    activeColorConfig = { fill: '#000000', stroke: '#ffffff' };
+                }
+            });
+        });
+
+        // Кнопка 1: Включение/выключение граффити
+        graffitiToggleBtn.addEventListener('click', () => {
+            // Если включен режим кружочков — очищаем их
+            if (isCirclesMode) {
+                clearCircles();
+            }
+
+            isGraffitiMode = !isGraffitiMode;
+            if (isGraffitiMode) {
+                graffitiToggleBtn.classList.add('active-mode');
+                savvaPalette.style.display = 'flex';
+                graffitiCanvas.classList.add('active');
+                spawnCirclesBtn.classList.remove('active-mode');
+                isCirclesMode = false;
+            } else {
+                exitGraffitiMode();
+            }
+        });
+
+        function exitGraffitiMode() {
+            isGraffitiMode = false;
+            graffitiToggleBtn.classList.remove('active-mode');
+            savvaPalette.style.display = 'none';
+            graffitiCanvas.classList.remove('active');
+        }
+
+        // Рисование граффити мышкой/пальцем
+        let isDrawing = false;
+        let currentStroke = [];
+
+        function getEventPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        graffitiCanvas.addEventListener('mousedown', startDraw);
+        graffitiCanvas.addEventListener('touchstart', startDraw, { passive: false });
+
+        graffitiCanvas.addEventListener('mousemove', drawMove);
+        graffitiCanvas.addEventListener('touchmove', drawMove, { passive: false });
+
+        window.addEventListener('mouseup', endDraw);
+        window.addEventListener('touchend', endDraw);
+
+        function startDraw(e) {
+            if (!isGraffitiMode) return;
+            e.preventDefault();
+            isDrawing = true;
+            currentStroke = {
+                points: [getEventPos(e)],
+                color: { ...activeColorConfig },
+                time: Date.now()
+            };
+        }
+
+        function drawMove(e) {
+            if (!isGraffitiMode || !isDrawing) return;
+            e.preventDefault();
+            currentStroke.points.push(getEventPos(e));
+            requestVisualFrame();
+        }
+
+        function endDraw() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentStroke && currentStroke.points && currentStroke.points.length > 1) {
+                strokes.push(currentStroke);
+                // Авто-удаление через 10 секунд
+                setTimeout(() => {
+                    const idx = strokes.indexOf(currentStroke);
+                    if (idx > -1) strokes.splice(idx, 1);
+                }, 10000);
+            }
+            currentStroke = [];
+            requestVisualFrame();
+        }
+
+        // Кнопка 2: Включение режима спавна желтых кружочков
+        spawnCirclesBtn.addEventListener('click', () => {
+            // Если включен режим граффити — выключаем его и очищаем граффити
+            if (isGraffitiMode) {
+                exitGraffitiMode();
+                strokes = [];
+                ctx.clearRect(0, 0, graffitiCanvas.width, graffitiCanvas.height);
+            }
+
+            isCirclesMode = !isCirclesMode;
+            if (isCirclesMode) {
+                spawnCirclesBtn.classList.add('active-mode');
+            } else {
+                spawnCirclesBtn.classList.remove('active-mode');
+            }
+        });
+
+        function clearCircles() {
+            isCirclesMode = false;
+            spawnCirclesBtn.classList.remove('active-mode');
+            physicsCircles.forEach(c => c.element.remove());
+            physicsCircles = [];
+        }
+
+        // Клик по экрану для спавна кружочков (максимум 5)
+        window.addEventListener('click', (e) => {
+            if (!isCirclesMode) return;
+            // Игнорируем клики по элементам управления или шапке
+            if (e.target.closest('#savvaControls') || e.target.closest('.header') || e.target.closest('.codes-card')) return;
+
+            if (physicsCircles.length >= 5) {
+                // Удаляем самый старый кружок при превышении лимита
+                const oldest = physicsCircles.shift();
+                if (oldest && oldest.element) oldest.element.remove();
+            }
+
+            const circleEl = document.createElement('div');
+            circleEl.className = 'physics-circle';
+            document.body.appendChild(circleEl);
+
+            const circleObj = {
+                element: circleEl,
+                x: e.clientX,
+                y: e.clientY,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                rotation: Math.random() * 360,
+                vRot: (Math.random() - 0.5) * 6,
+                createdAt: Date.now()
+            };
+
+            physicsCircles.push(circleObj);
+            requestVisualFrame();
+
+            // Удаление кружочка через 10 секунд
+            setTimeout(() => {
+                const index = physicsCircles.indexOf(circleObj);
+                if (index > -1) {
+                    physicsCircles.splice(index, 1);
+                    circleEl.remove();
+                    requestVisualFrame();
+                }
+            }, 10000);
+        });
+
+        // Главный цикл анимации. Он запускается только когда действительно есть что рисовать/двигать.
+        function requestVisualFrame() {
+            if (animationFrameId === null) animationFrameId = requestAnimationFrame(animateLoop);
+        }
+
+        function animateLoop() {
+            animationFrameId = null;
+            // 1. Очистка и отрисовка граффити
+            ctx.clearRect(0, 0, graffitiCanvas.width, graffitiCanvas.height);
+
+            // Рисуем текущую линию, если рисуем
+            if (isDrawing && currentStroke.points.length > 1) {
+                drawSingleStroke(currentStroke);
+            }
+            // Рисуем сохраненные линии
+            strokes.forEach(s => drawSingleStroke(s));
+
+            // 2. Физика кружочков (столкновения друг с другом, вращение и движение)
+            const radius = 25; // диаметр 50px -> радиус 25
+            for (let i = 0; i < physicsCircles.length; i++) {
+                let c1 = physicsCircles[i];
+                c1.x += c1.vx;
+                c1.y += c1.vy;
+                c1.rotation += c1.vRot;
+
+                // Ограничение по границам экрана
+                if (c1.x < radius) { c1.x = radius; c1.vx *= -1; }
+                if (c1.x > window.innerWidth - radius) { c1.x = window.innerWidth - radius; c1.vx *= -1; }
+                if (c1.y < radius) { c1.y = radius; c1.vy *= -1; }
+                if (c1.y > window.innerHeight - radius) { c1.y = window.innerHeight - radius; c1.vy *= -1; }
+
+                // Система толкания (столкновение кружочков друг с другом)
+                for (let j = i + 1; j < physicsCircles.length; j++) {
+                    let c2 = physicsCircles[j];
+                    let dx = c2.x - c1.x;
+                    let dy = c2.y - c1.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    let minDist = radius * 2;
+
+                    if (dist < minDist) {
+                        let overlap = minDist - dist;
+                        let nx = dx / (dist || 1);
+                        let ny = dy / (dist || 1);
+
+                        // Разъединяем кружочки, чтобы они не слипались
+                        c1.x -= nx * overlap * 0.5;
+                        c1.y -= ny * overlap * 0.5;
+                        c2.x += nx * overlap * 0.5;
+                        c2.y += ny * overlap * 0.5;
+
+                        // Меняем скорости (упругое отталкивание)
+                        let tempVx = c1.vx;
+                        let tempVy = c1.vy;
+                        c1.vx = c2.vx * 0.8;
+                        c1.vy = c2.vy * 0.8;
+                        c2.vx = tempVx * 0.8;
+                        c2.vy = tempVy * 0.8;
+                    }
+                }
+
+                // Применяем координаты к DOM-элементу кружочка с вращением
+                c1.element.style.left = c1.x + 'px';
+                c1.element.style.top = c1.y + 'px';
+                c1.element.style.transform = `translate(-50%, -50%) rotate(${c1.rotation}deg)`;
+            }
+
+            if (isDrawing || strokes.length || physicsCircles.length) requestVisualFrame();
+        }
+
+        function drawSingleStroke(stroke) {
+            if (stroke.points.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+            for (let i = 1; i < stroke.points.length; i++) {
+                ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+            }
+            ctx.strokeStyle = stroke.color.stroke;
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            ctx.strokeStyle = stroke.color.fill;
+            ctx.lineWidth = 6;
+            ctx.stroke();
+        }
+
+        // Стартуем только по необходимости
+
+        // Зеленоватые пузырьки для уличной темы SavvaViva
+        const savvaAloeBubbles = document.getElementById('savvaAloeBubbles');
+        for (let i = 0; i < 10; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'savva-aloe-bubble';
+            const size = 10 + Math.random() * 28;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = (Math.random() * 100) + '%';
+            bubble.style.animationDuration = (12 + Math.random() * 10) + 's';
+            bubble.style.animationDelay = (-Math.random() * 15) + 's';
+            savvaAloeBubbles.appendChild(bubble);
+        }
+
+        // Логика активации кодов
+        const validCodes = ['AEROXP', 'N3M', 'SavvaViva', 'N3K1T', 'Glad'];
+        const promoInput = document.getElementById('promoInput');
+        const promoBtn = document.getElementById('promoBtn');
+        const codeMessage = document.getElementById('codeMessage');
+
+        function checkPromoCode() {
+            const enteredCode = promoInput.value.trim();
+
+            if (!enteredCode) {
+                codeMessage.style.color = '#f87171';
+                codeMessage.textContent = 'Введите промокод!';
+                return;
+            }
+
+            const foundCode = validCodes.find(code => code.toLowerCase() === enteredCode.toLowerCase());
+
+            if (foundCode) {
+                codeMessage.style.color = 'var(--green-tag)';
+                
+                // Очищаем предыдущие специфичные темы
+                document.body.classList.remove('clown-theme', 'n3k1t-theme', 'savvaviva-theme');
+                savvaControls.style.display = 'none';
+                clearCircles();
+                exitGraffitiMode();
+                strokes = [];
+
+                if (foundCode === 'N3M') {
+                    document.body.classList.add('clown-theme');
+                    codeMessage.textContent = '🎉 Активирован секретный код N3M! Включен милый и красочный режим!';
+
+                    confetti({
+                        particleCount: 140,
+                        spread: 90,
+                        origin: { y: 0.6 },
+                        colors: ['#ff1493', '#ff69b4', '#ffb6c1', '#ffffff', '#ff66b2', '#ff99cc']
+                    });
+
+                } else if (foundCode === 'SavvaViva') {
+                    document.body.classList.add('savvaviva-theme');
+                    codeMessage.textContent = '🏙️ Активирован код SavvaViva! Весь сайт затопило напитком алое вера!';
+                    confetti({
+                        particleCount: 110,
+                        spread: 105,
+                        origin: { y: 0.6 },
+                        colors: ['#39d98a', '#087f8c', '#53e07c', '#a4ffcf', '#00bedd']
+                    });
+
+                } else if (foundCode === 'Glad') {
+                    savvaControls.style.display = 'flex';
+                    codeMessage.textContent = '✨ Активирован код Glad! Открыты граффити и жёлтые кружочки!';
+                    confetti({
+                        particleCount: 120,
+                        spread: 100,
+                        origin: { y: 0.6 },
+                        colors: ['#38bdf8', '#2563eb', '#ffffff', '#ffcc00']
+                    });
+
+                } else if (foundCode === 'AEROXP') {
+                    if (typeof window.aeroOpen === 'function') window.aeroOpen();
+                    codeMessage.textContent = 'ВЫ ПОЛУЧИЛИ ДОСТУП К КОМПЬЮТЕРУ РОБОТНИКА В AEROXP';
+
+                } else if (foundCode === 'N3K1T') {
+                    document.body.classList.add('n3k1t-theme');
+                    codeMessage.textContent = '🌊 Активирован код N3K1T! Включен режим FRUTIGER AERO';
+                } else {
+                    codeMessage.textContent = `Код "${foundCode}" успешно принят!`;
+                }
+            } else {
+                codeMessage.style.color = '#f87171';
+                codeMessage.textContent = 'Неверный код!';
+            }
+        }
+
+
+// =========================================================
+         // PROJECT: AEROXP — lightweight interactive Vista-style desktop
+         // DOM is declared after this script, so initialize only after parsing.
+         document.addEventListener('DOMContentLoaded', () => {
+         // =========================================================
+         const aeroDesktop = document.getElementById('aeroxp-desktop');
+         const aeroGrid = document.getElementById('aeroGrid');
+         const aeroPath = document.getElementById('aeroPath');
+         const aeroAddress = document.getElementById('aeroAddress');
+         const aeroStatus = document.getElementById('aeroStatus');
+         const aeroTitle = document.getElementById('aeroWindowTitle');
+         const aeroReader = document.getElementById('aeroReader');
+         const aeroReaderTitle = document.getElementById('aeroReaderTitle');
+         const aeroReaderHeading = document.getElementById('aeroReaderHeading');
+         const aeroReaderText = document.getElementById('aeroReaderText');
+         const aeroRotate = document.getElementById('aeroRotate');
+         const aeroTouchCursor = document.getElementById('aeroTouchCursor');
+         const aeroExplorer = document.getElementById('aeroExplorer');
+         const aeroStart = document.getElementById('aeroStart');
+         const aeroStartMenu = document.getElementById('aeroStartMenu');
+         const aeroTaskApp = document.getElementById('aeroTaskApp');
+         const aeroShutdown = document.getElementById('aeroShutdown');
+         const aeroStartExplorer = document.getElementById('aeroStartExplorer');
+         const aeroStartNotes = document.getElementById('aeroStartNotes');
+         const aeroStartAbout = document.getElementById('aeroStartAbout');
+         const aeroContext = document.getElementById('aeroContextMenu');
+         const aeroNotification = document.getElementById('aeroNotification');
+         const aeroComputerPanel = document.getElementById('aeroComputerPanel');
+         const aeroComputerClose = document.getElementById('aeroComputerClose');
+         const aeroShutdownScreen = document.getElementById('aeroShutdownScreen');
+         const aeroBatteryPercent = document.getElementById('aeroBatteryPercent');
+         const aeroBatteryFill = document.getElementById('aeroBatteryFill');
+         const aeroBatteryTime = document.getElementById('aeroBatteryTime');
+         const aeroBatteryWarning = document.getElementById('aeroBatteryWarning');
+         const aeroCpuFill = document.getElementById('aeroCpuFill');
+         const aeroRamFill = document.getElementById('aeroRamFill');
+         const aeroCpuText = document.getElementById('aeroCpuText');
+         const aeroRamText = document.getElementById('aeroRamText');
+         const aeroStartBattery = document.getElementById('aeroStartBattery');
+         const aeroStartSearch = document.getElementById('aeroStartSearch');
+         const aeroCtxOpen = document.getElementById('aeroCtxOpen');
+         const aeroCtxRefresh = document.getElementById('aeroCtxRefresh');
+         const aeroCtxProperties = document.getElementById('aeroCtxProperties');
+         const aeroHistory = [];
+         let aeroCurrent = 'root';
+         let aeroBatterySeconds = 3600; // 1 час (3600 секунд)
+         let aeroBatteryTimer = null;
+         let aeroSystemTimer = null;
+         let aeroIsShuttingDown = false;
+
+         const aeroFiles = {
+   root: [
+     {key:'developers', type:'folder', name:'DEVELOPERS'},
+     {key:'holograms', type:'folder', name:'HOLOGRAMS'},
+     {key:'readme', type:'text', name:'README_FIRST.txt', text:'Я Адриан, мне 27 лет. И это мой рабочий компьютер, я в нём записываю информацию про свою работу и про то как сейчас идёт разработка наших проектов.'}
+   ],
+   holograms: [
+     {key:'n3k1t', type:'folder', name:'N3K1T'}
+   ],
+  n3k1t: [
+  {key:'photo1', type:'image', name:'ОБРАЗ-1', src:'N3K1T-1.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'photo2', type:'image', name:'ОБРАЗ-2', src:'N3K1T-2.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'photo3', type:'image', name:'ОБРАЗ-3', src:'N3K1T-3.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'photo4', type:'image', name:'ОБРАЗ-4', src:'N3K1T-4.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'photo5', type:'image', name:'N3K1T БЕЗ ОЧКОВ', src:'N3K1T-5.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'photo6', type:'image', name:'СТАРЫЙ ДИЗАЙН', src:'N3K1T-6.png', icon:'🖼️', subtitle:'PNG Image'},
+  {key:'model1', type:'model3d', name:'3D МОДЕЛЬ N3K1T', src:'N3K1T.glb', texture:'N3K1T_texture.png', icon:'🫧', subtitle:'3D Model'}
+],
+   developers: [
+      {key:'adrian', type:'folder', name:'adrian_'},
+      {key:'team_archive', type:'folder', name:'team_archive'}
+    ],
+    team_archive: [
+      {key:'photo1', type:'image', name:'здание нашей корпорации', src:'aeroxp_irl.png', icon:'🖼️', subtitle:'PNG Image'}
+    ],
+    adrian: [
+     {key:'devday1', type:'text', name:'devday1', text:'Наконец-то я могу помогать данному проекту, я очень счастлив по этому поводу, столько ожиданий, и меня приняли! Сегодня мне сказали что мы будем продолжать работать над голограммой под кодовым именем N3K1T, и мне уже не терпится увидеть результат! Сама команда мне твердила что каждая попытка воссоздать голограмму кончается ужасно, они уже два месяца трудятся, и каждый раз все заканчивается отключением электричества во всем парке Старр, а один раз, когда они были очень близки к воссозданию в реальный мир, то оборудование взорвалось и начался пожар, но оперативно приехали пожарные и все потушили, потом они месяц всё восстанавливали и вот дня три назад снова взялись за работу. Надеюсь мы уже этим месяцем сможем воссоздать живую голограмму, и все обойдётся хорошо, я очень на это надеюсь.'},
+     {key:'devday3', type:'text', name:'devday3', text:'Вообще никак не получилось бы вчера написать успехи, ну и черт с ним. Зато сегодня мы продвинулись к большему, оборудование уже не так сильно нагревается и перезагружается, оно уже стало работать лучше и поэтому я в предвкушении чего-то масштабного и интересного, возможно уже скоро у нас всё получится, я честно пока не знаю.'},
+     {key:'devdey5', type:'text', name:'devdey5', text:'Сегодня мы создали 3D-модель нашей первой голограммы. У нас было два варианта её дизайна, и вместе с командой мы выбрали один из них. Сегодня мы начали работать над его голосом и риггингом для модели. На днях мы постараемся вывести эту голограмму в реальный мир. Хотелось бы, чтобы всё прошло как положено и без каких либо проблем.'},
+     {key:'devdey7', type:'text', name:'devdey7', text:'Ну, наконец-то мы с коллегами спустя два месяца смогли реализовать наш первый проект — N3K1T. Он прекрасен, выглядит ровно так, как на наших рисунках, именно таким, каким я его представлял в идеале. Горжусь тем, что мы создали. Он ещё и разговаривает как реальный человек, и его можно потрогать так, будто он реально живой. Жду не дождусь увидеть реакцию жителей парка-старр, когда они увидят наше творение в действии!'}
+   ],
+   'aero-notes': [
+     {key:'devtools', type:'folder', name:'N3K1T'},
+     {key:'project-log', type:'text', name:'project_log.txt', text:'AEROXP // INTERNAL\n\nMore files are planned for this archive.'}
+   ],
+   team: []
+   };
+
+   function aeroPathName(key){
+     return ({root:'PROJECT: AEROXP',developers:'PROJECT: AEROXP › DEVELOPERS',adrian:'PROJECT: AEROXP › DEVELOPERS › adrian_',holograms:'PROJECT: AEROXP › HOLOGRAMS',n3k1t:'PROJECT: AEROXP › HOLOGRAMS › N3K1T',team:'PROJECT: AEROXP › DEVELOPERS › team_archive',devtools:'PROJECT: AEROXP › HOLOGRAMS › N3K1T'})[key] || 'Computer';
+   }
+
+   function aeroRender(key, push=true){
+     if(push && aeroCurrent!==key) aeroHistory.push(aeroCurrent);
+     aeroCurrent=key;
+     const items=aeroFiles[key]||[];
+     aeroPath.textContent=aeroPathName(key); aeroAddress.textContent='Computer › '+aeroPathName(key).replaceAll(' › ',' › ');
+     aeroTitle.textContent=aeroPathName(key)+' — Explorer'; aeroGrid.innerHTML='';
+     items.forEach(item=>{
+       const el=document.createElement('div'); el.className='aero-file'; el.dataset.aeroKey=item.key; el.dataset.aeroType=item.type;
+       el.style.cursor='pointer';
+       let icon = item.type==='folder'?'📁':'📄';
+       let meta = item.type==='folder'?'Folder':'Text file';
+       if(item.type === 'image' || item.type === 'model3d') {
+         icon = item.icon || (item.type === 'model3d' ? '🧊' : '🖼️');
+         meta = item.subtitle || (item.type === 'model3d' ? '3D Model' : 'PNG Image');
+       }
+       el.innerHTML=`<div class="aero-file-icon" style="font-size:28px;">${icon}</div><div class="aero-file-name">${item.name}</div><div class="aero-file-meta">${meta}</div>`;
+       
+       // Открытие в 1 клик/тап
+       el.addEventListener('pointerup',()=>aeroActivate(item)); 
+       aeroGrid.appendChild(el);
+     });
+     aeroStatus.textContent=`${items.length} object${items.length===1?'':'s'}`;
+   }
+
+   function aeroActivate(item){
+     document.querySelectorAll('.aero-file.selected').forEach(x=>x.classList.remove('selected'));
+     const selected=document.querySelector(`.aero-file[data-aero-key="${CSS.escape(item.key)}"]`); 
+     if(selected) selected.classList.add('selected');
+     
+     // Вызов открытия сразу без двойного клика
+     if(item.type==='folder') aeroRender(item.key); 
+     else aeroOpenReader(item);
+   }
+
+   function aeroOpenReader(item){
+  if(item.type === 'image') {
+    aeroReaderTitle.textContent=item.name+' — Photo Viewer'; 
+    aeroReaderHeading.textContent=item.name; 
+    aeroReaderText.innerHTML=`<div style="text-align:center; padding:10px;"><img src="${item.src}" alt="${item.name}" style="max-width:100%; max-height:60vh; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.2);"></div>`;
+  } else if(item.type === 'model3d') {
+    aeroReaderTitle.textContent=item.name+' — 3D Viewer'; 
+    aeroReaderHeading.textContent=item.name; 
+    aeroReaderText.innerHTML=`<div style="width:100%; height:65vh; display:flex; justify-content:center; align-items:center;">
+      <model-viewer id="aero3dViewer" src="${item.src}" alt="${item.name}" auto-rotate camera-controls bounds="tight" field-of-view="25deg" camera-orbit="0deg 75deg auto" shadow-intensity="1" style="width:100%; height:100%; background-color:#111827; border-radius:8px;"></model-viewer>
+    </div>`;
+
+    if (item.texture) {
+      const viewer = document.getElementById('aero3dViewer');
+      viewer.addEventListener('load', async () => {
+        const tex = await viewer.createTexture(item.texture);
+        if (viewer.model && viewer.model.materials.length > 0) {
+          viewer.model.materials[0].pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+        }
+      });
+    }
+  } else {
+    aeroReaderTitle.textContent=item.name+' — Notepad'; 
+    aeroReaderHeading.textContent=item.name; 
+    aeroReaderText.textContent=item.text||''; 
+  }
+  aeroReader.classList.add('open');
+}
+
+   function aeroCloseReader(){aeroReader.classList.remove('open')}
+
+   function aeroResetBattery(){
+     clearInterval(aeroBatteryTimer);
+     aeroBatterySeconds=3600; // Ровно 1 час работы
+     aeroIsShuttingDown=false;
+     aeroUpdateBatteryUI();
+     aeroBatteryTimer=setInterval(()=>{
+       if(!aeroDesktop.classList.contains('aeroxp-open') || aeroIsShuttingDown) return;
+       aeroBatterySeconds=Math.max(0,aeroBatterySeconds-1);
+       aeroUpdateBatteryUI();
+       if(aeroBatterySeconds===120 || aeroBatterySeconds===60 || aeroBatterySeconds===30){
+         aeroBatteryWarning.textContent='⚠️ Battery low — Project: AeroXP will shut down automatically in '+aeroBatterySeconds+' seconds.';
+         aeroBatteryWarning.classList.add('show');
+         clearTimeout(window.__aeroBatteryWarn);
+         window.__aeroBatteryWarn=setTimeout(()=>aeroBatteryWarning.classList.remove('show'),4500);
+       }
+       if(aeroBatterySeconds===0){
+         aeroBatteryWarning.textContent='🔴 Battery empty — shutting down Project: AeroXP…';
+         aeroBatteryWarning.classList.add('show');
+         aeroShutdownComputer(true);
+       }
+     },1000);
+   }
+
+   function aeroUpdateBatteryUI(){
+     const pct=Math.ceil(aeroBatterySeconds/36); // Расчёт процентов исходя из 3600 секунд
+     const min=Math.floor(aeroBatterySeconds/60), sec=aeroBatterySeconds%60;
+     const time=min+':'+String(sec).padStart(2,'0');
+     if(aeroBatteryPercent) aeroBatteryPercent.textContent=pct+'%';
+     if(aeroBatteryFill){ aeroBatteryFill.style.width=pct+'%'; aeroBatteryFill.classList.toggle('low',pct<=25); aeroBatteryFill.classList.toggle('critical',pct<=10); }
+     if(aeroBatteryTime) aeroBatteryTime.textContent='Remaining '+time;
+     if(aeroStartBattery) aeroStartBattery.textContent='Battery: '+pct+'% · '+time;
+     const tray=document.getElementById('aeroTrayBattery'); if(tray) tray.textContent='🔋 '+pct+'%';
+   }
+
+   function aeroStartSystemMonitor(){
+     clearInterval(aeroSystemTimer);
+     const tick=()=>{
+       const cpu=Math.round(18+Math.random()*42), ram=Math.round(31+Math.random()*26);
+       if(aeroCpuFill) aeroCpuFill.style.width=cpu+'%'; if(aeroCpuText) aeroCpuText.textContent=cpu+'%';
+       if(aeroRamFill) aeroRamFill.style.width=ram+'%'; if(aeroRamText) aeroRamText.textContent=ram+'%';
+     }; tick(); aeroSystemTimer=setInterval(tick,2200);
+   }
+
+   function aeroStopSystemMonitor(){clearInterval(aeroSystemTimer); aeroSystemTimer=null;}
+
+   window.aeroOpen = function(){
+       aeroDesktop.classList.add('aeroxp-open');
+       aeroDesktop.setAttribute('aria-hidden','false');
+       aeroHistory.length=0;
+       aeroStartMenu.classList.remove('open');
+       aeroExplorer.classList.remove('hidden');
+       aeroTaskApp.classList.add('active');
+       aeroRender('root',false);
+       aeroUpdateOrientation();
+       aeroUpdateClock();
+       aeroResetBattery();
+       aeroStartSystemMonitor();
+     };
+
+   function aeroNotify(text){
+     aeroNotification.textContent=text; aeroNotification.classList.add('show');
+     clearTimeout(window.__aeroToast); window.__aeroToast=setTimeout(()=>aeroNotification.classList.remove('show'),2600);
+   }
+
+   function aeroOpenComputer(){ aeroComputerPanel.classList.add('open'); aeroStartMenu.classList.remove('open'); aeroNotification.classList.remove('show'); }
+   function aeroCloseComputer(){ aeroComputerPanel.classList.remove('open'); }
+   function aeroRefresh(){ aeroRender(aeroCurrent,false); aeroNotify('View refreshed'); }
+
+   function aeroOpenSelected(){
+     const selected=document.querySelector('.aero-file.selected');
+     if(!selected){ aeroNotify('Select a folder or file first.'); return; }
+     const item=(aeroFiles[aeroCurrent]||[]).find(x=>x.key===selected.dataset.aeroKey);
+     if(item){ if(item.type==='folder') aeroRender(item.key); else aeroOpenReader(item); }
+   }
+
+   function aeroShowProperties(){ aeroNotify(aeroCurrent==='root'?'PROJECT: AEROXP — Folder':'Location: '+aeroPathName(aeroCurrent)); }
+
+   function aeroClose(){
+     aeroCloseReader();
+     aeroExplorer.classList.add('hidden');
+     aeroTaskApp.classList.remove('active');
+     aeroStartMenu.classList.remove('open');
+   }
+
+   function aeroShutdownComputer(fromBattery=false){
+     if(aeroIsShuttingDown) return;
+     aeroIsShuttingDown=true;
+     clearInterval(aeroBatteryTimer); aeroBatteryTimer=null; aeroStopSystemMonitor();
+     aeroCloseReader(); aeroStartMenu.classList.remove('open'); aeroComputerPanel.classList.remove('open');
+     const msg=aeroShutdownScreen.querySelector('p'); if(msg) msg.textContent=fromBattery?'Battery depleted. Saving session and closing virtual computer…':'Saving session and closing virtual computer…';
+     aeroShutdownScreen.classList.add('show');
+     setTimeout(()=>{
+       aeroShutdownScreen.classList.remove('show');
+       aeroBatteryWarning.classList.remove('show');
+       aeroDesktop.classList.remove('aeroxp-open'); aeroDesktop.setAttribute('aria-hidden','true');
+       aeroExplorer.classList.remove('hidden'); aeroTaskApp.classList.add('active');
+       aeroHistory.length=0; aeroRender('root',false); window.scrollTo({top:0,left:0,behavior:'instant'});
+     },1100);
+   }
+
+   function aeroUpdateOrientation(){
+     aeroRotate.style.display=(aeroDesktop.classList.contains('aeroxp-open') && window.innerWidth<900 && window.innerHeight>window.innerWidth)?'flex':'none';
+   }
+
+   function aeroUpdateClock(){const el=document.getElementById('aeroClock'); if(el) el.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+
+   // Клики по ярлыкам на рабочем столе с одного нажатия
+   document.querySelectorAll('[data-aero-open]').forEach(el=>{
+     el.addEventListener('click',()=>{ 
+       document.querySelectorAll('.aero-icon.selected').forEach(x=>x.classList.remove('selected')); 
+       el.classList.add('selected'); 
+       const key=el.dataset.aeroOpen; 
+       aeroExplorer.classList.remove('hidden'); 
+       aeroTaskApp.classList.add('active'); 
+       if(key) aeroRender(key,false); 
+     });
+   });
+
+   document.querySelectorAll('[data-aero-computer]').forEach(el=>el.addEventListener('click',aeroOpenComputer));
+   document.querySelectorAll('[data-aero-recycle]').forEach(el=>el.addEventListener('click',()=>aeroNotify('Recycle Bin is empty.')));
+
+   document.getElementById('aeroBack').addEventListener('click',()=>{const prev=aeroHistory.pop(); if(prev) aeroRender(prev,false); else aeroNotify('No previous location.');});
+   document.getElementById('aeroHome').addEventListener('click',()=>aeroRender('root'));
+   document.getElementById('aeroClose').addEventListener('click',aeroClose);
+   document.getElementById('aeroReaderClose').addEventListener('click',aeroCloseReader);
+   aeroComputerClose.addEventListener('click',aeroCloseComputer);
+   aeroStart.addEventListener('click', (e)=>{ e.stopPropagation(); aeroStartMenu.classList.toggle('open'); if(aeroStartMenu.classList.contains('open')) setTimeout(()=>aeroStartSearch.focus(),20); });
+   aeroTaskApp.addEventListener('click', ()=>{ aeroStartMenu.classList.remove('open'); aeroExplorer.classList.toggle('hidden'); aeroTaskApp.classList.toggle('active'); });
+   aeroShutdown.addEventListener('click', aeroShutdownComputer);
+   aeroStartExplorer.addEventListener('click', ()=>{ aeroStartMenu.classList.remove('open'); aeroExplorer.classList.remove('hidden'); aeroTaskApp.classList.add('active'); aeroRender('root',false); });
+   aeroStartNotes.addEventListener('click', ()=>{ aeroStartMenu.classList.remove('open'); aeroExplorer.classList.remove('hidden'); aeroTaskApp.classList.add('active'); aeroRender('aero-notes',false); });
+   aeroStartAbout.addEventListener('click', ()=>{ aeroStartMenu.classList.remove('open'); aeroExplorer.classList.remove('hidden'); aeroTaskApp.classList.add('active'); aeroRender('root',false); });
+   aeroCtxOpen.addEventListener('click',()=>{aeroContext.classList.remove('open');aeroOpenSelected();});
+   aeroCtxRefresh.addEventListener('click',()=>{aeroContext.classList.remove('open');aeroRefresh();});
+   aeroCtxProperties.addEventListener('click',()=>{aeroContext.classList.remove('open');aeroShowProperties();});
+
+   aeroStartSearch.addEventListener('input',()=>{
+     const q=aeroStartSearch.value.trim().toLowerCase();
+     document.querySelectorAll('.aero-start-item').forEach(btn=>btn.style.display=(!q||btn.textContent.toLowerCase().includes(q))?'flex':'none');
+   });
+
+   aeroDesktop.addEventListener('pointerdown', (e)=>{
+     if(!e.target.closest('.aero-start-menu') && !e.target.closest('.aero-start')) aeroStartMenu.classList.remove('open');
+     if(!e.target.closest('#aeroContextMenu')) aeroContext.classList.remove('open');
+     if(e.target.closest('.aero-wallpaper')) aeroComputerPanel.classList.remove('open');
+   });
+
+   aeroDesktop.addEventListener('contextmenu', (e)=>{
+     e.preventDefault();
+     if(!e.target.closest('.aero-window') && !e.target.closest('.aero-start-menu') && !e.target.closest('.aero-taskbar')){
+       aeroContext.style.left=Math.min(e.clientX,aeroDesktop.clientWidth-220)+'px'; aeroContext.style.top=Math.min(e.clientY,aeroDesktop.clientHeight-150)+'px'; aeroContext.classList.add('open');
+     } else if(e.target.closest('.aero-file')) {
+       aeroContext.style.left=Math.min(e.clientX,aeroDesktop.clientWidth-220)+'px'; aeroContext.style.top=Math.min(e.clientY,aeroDesktop.clientHeight-150)+'px'; aeroContext.classList.add('open');
+     }
+   });
+
+   aeroDesktop.addEventListener('click', (e)=>{ if(e.target.closest('.aero-wallpaper')) aeroExplorer.classList.remove('hidden'); });
+
+   document.addEventListener('keydown',(e)=>{
+     if(!aeroDesktop.classList.contains('aeroxp-open')) return;
+     if(e.key==='Escape'){aeroStartMenu.classList.remove('open');aeroContext.classList.remove('open');aeroCloseReader();aeroCloseComputer();}
+     if(e.key==='Enter') aeroOpenSelected();
+     if(e.key==='F5') {e.preventDefault();aeroRefresh();}
+   });
+
+   window.addEventListener('resize',aeroUpdateOrientation);
+   setInterval(aeroUpdateClock,30000);
+   document.addEventListener('touchmove',e=>{if(!aeroDesktop.classList.contains('aeroxp-open'))return; const t=e.touches[0]; if(t){aeroTouchCursor.style.left=t.clientX+'px';aeroTouchCursor.style.top=t.clientY+'px';}}, {passive:true});
+   document.addEventListener('touchstart',e=>{if(!aeroDesktop.classList.contains('aeroxp-open'))return; const t=e.touches[0]; if(t){aeroTouchCursor.style.left=t.clientX+'px';aeroTouchCursor.style.top=t.clientY+'px';}}, {passive:true});
+
+   });
+   promoBtn.addEventListener('click', checkPromoCode);
+   promoInput.addEventListener('keypress', (e) => {
+       if (e.key === 'Enter') {
+           checkPromoCode();
+       }
+   });
+</script>
+
+<!-- PROJECT: AEROXP desktop -->
+<div id="aeroxp-desktop" aria-hidden="true">
+  <div class="aero-wallpaper"></div><div class="aero-glow"></div>
+  <div class="aero-gadgets" aria-hidden="true">
+    <div class="aero-gadget"><div class="aero-gadget-title">PROJECT: AEROXP POWER</div><div class="aero-gadget-main"><div class="aero-battery-icon"><div class="aero-battery-fill" id="aeroBatteryFill"></div></div><div class="aero-battery-percent" id="aeroBatteryPercent">100%</div></div><div class="aero-gadget-sub" id="aeroBatteryTime">Remaining 60:00</div></div>
+    <div class="aero-gadget"><div class="aero-gadget-title">SYSTEM MONITOR</div><div class="aero-gadget-sub">CPU <b id="aeroCpuText">—</b></div><div class="aero-meter"><div class="aero-meter-fill" id="aeroCpuFill"></div></div><div class="aero-gadget-sub">Memory <b id="aeroRamText">—</b></div><div class="aero-meter"><div class="aero-meter-fill" id="aeroRamFill"></div></div></div>
+  </div>
+  <div class="aero-battery-warning" id="aeroBatteryWarning"></div>
+  <div class="aero-desktop-icons">
+    <div class="aero-icon" data-aero-open="root">
+  <div class="aero-icon-symbol" style="width: 38px; height: 38px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+    <img src="AEROXPICON.png" alt="AeroXP" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+  </div>
+  <div class="aero-icon-label">PROJECT: AEROXP</div>
+</div>
+    <div class="aero-icon" data-aero-computer="1"><div class="aero-icon-symbol">🖥️</div><div class="aero-icon-label">Computer</div></div>
+    <div class="aero-icon" data-aero-recycle="1"><div class="aero-icon-symbol">🗑️</div><div class="aero-icon-label">Recycle Bin</div></div>
+  </div>
+  <div class="aero-desktop-hint">PROJECT: AEROXP • Desktop</div>
+  <div class="aero-window" id="aeroExplorer">
+    <div class="aero-titlebar"><div class="aero-title" id="aeroWindowTitle">PROJECT: AEROXP — Explorer</div><div class="aero-controls"><button class="aero-win-btn close" id="aeroClose" title="Закрыть окно">×</button></div></div>
+    <div class="aero-toolbar"><button class="aero-navbtn" id="aeroBack">←</button><button class="aero-navbtn" id="aeroHome">⌂</button><div class="aero-address" id="aeroAddress">Computer › PROJECT: AEROXP</div></div>
+    <div class="aero-content"><aside class="aero-sidebar"><div class="aero-side-title">Favorites</div><div class="aero-side-item" data-aero-open="root">PROJECT: AEROXP</div><div class="aero-side-item" data-aero-open="developers">DEVELOPERS</div><div class="aero-side-title">Computer</div><div class="aero-side-item">Local Disk (C:)</div><div class="aero-side-item">Network</div></aside><main class="aero-files"><div class="aero-path" id="aeroPath">PROJECT: AEROXP</div><div class="aero-grid" id="aeroGrid"></div></main></div>
+    <div class="aero-status" id="aeroStatus">0 objects</div>
+  </div>
+  <div class="aero-reader" id="aeroReader"><div class="aero-reader-bar"><button class="aero-reader-close" id="aeroReaderClose">← Back</button><div class="aero-reader-title" id="aeroReaderTitle">Notepad</div></div><div class="aero-reader-body"><article class="aero-reader-paper"><h2 id="aeroReaderHeading"></h2><p id="aeroReaderText"></p></article></div></div>
+  <div class="aero-mobile-rotate" id="aeroRotate"><div class="rotate-card"><div class="rotate-icon">📱↔️</div><h2>Поверните устройство</h2><p>Project: AeroXP рассчитан на горизонтальный экран. Поверните телефон боком, чтобы открыть компьютер.</p></div></div>
+  <div class="aero-touch-cursor" id="aeroTouchCursor"></div>
+  <div class="aero-context" id="aeroContextMenu">
+    <button id="aeroCtxOpen">Open</button>
+    <button id="aeroCtxRefresh">Refresh</button>
+    <div class="sep"></div>
+    <button id="aeroCtxProperties">Properties</button>
+  </div>
+  <div class="aero-notification" id="aeroNotification"></div>
+  <div class="aero-computer-panel" id="aeroComputerPanel">
+    <div class="aero-computer-head">Computer <button class="aero-computer-close" id="aeroComputerClose">Close</button></div>
+    <div class="aero-computer-body">
+      <div class="aero-drive"><b>💿 Local Disk (C:)</b><small>Project system drive<br>42.7 GB free of 80 GB</small></div>
+      <div class="aero-drive"><b>🌐 Network</b><small>Connected to Project: AeroXP</small></div>
+      <div class="aero-drive"><b>💾 Archive (D:)</b><small>Developer archives<br>128 GB free of 160 GB</small></div>
+    </div>
+  </div>
+  <div class="aero-shutdown-screen" id="aeroShutdownScreen"><div><div class="power-orb">⏻</div><h2>Shutting down Project: AeroXP</h2><p>Saving session and closing virtual computer…</p></div></div>
+
+  <div class="aero-start-menu" id="aeroStartMenu">
+    <div class="aero-start-head">PROJECT: AEROXP</div>
+    <div class="aero-search"><input id="aeroStartSearch" type="search" placeholder="Search programs and files..."></div>
+    <div class="aero-start-system"><span>🔋 <strong id="aeroStartBattery">Battery: 100% · 60:00</strong></span><span class="sys-battery">⚡ AC power: No</span></div>
+    <div class="aero-start-list">
+      <button class="aero-start-item" id="aeroStartExplorer"><span class="aero-start-icon">📁</span><span><b>Проводник</b><br><small>Открыть файлы Project: AeroXP</small></span></button>
+      <button class="aero-start-item" id="aeroStartNotes"><span class="aero-start-icon">📝</span><span><b>Заметки</b><br><small>Открыть AeroXP Notes</small></span></button>
+      <button class="aero-start-item" id="aeroStartAbout"><span class="aero-start-icon">💻</span><span><b>Компьютер</b><br><small>Главная папка проекта</small></span></button>
+    </div>
+    <div class="aero-start-footer"><button class="aero-shutdown" id="aeroShutdown">⏻ Выключить компьютер</button></div>
+  </div>
+  <div class="aero-taskbar"><button class="aero-start" id="aeroStart" title="Пуск">⊞</button><button class="aero-task-app active" id="aeroTaskApp">🗂️ PROJECT: AEROXP</button><div class="aero-tray"><span title="Network">📶</span><span title="Volume">🔊</span><span title="Battery" id="aeroTrayBattery">🔋 100%</span><div class="aero-clock" id="aeroClock"></div></div></div>
+</div>
+
+</body>
+</html>
